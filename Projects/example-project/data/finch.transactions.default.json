@@ -1,0 +1,42 @@
+[
+  {
+    "id": "tx_1",
+    "accountId": "acc_1",
+    "description": "Blue Bottle Coffee",
+    "amount": -5.5,
+    "date": "2026-04-13",
+    "category": "Food"
+  },
+  {
+    "id": "tx_2",
+    "accountId": "acc_1",
+    "description": "Payroll — Acme Inc",
+    "amount": 3200,
+    "date": "2026-04-12",
+    "category": "Income"
+  },
+  {
+    "id": "tx_3",
+    "accountId": "acc_1",
+    "description": "Uber",
+    "amount": -14.3,
+    "date": "2026-04-11",
+    "category": "Transport"
+  },
+  {
+    "id": "tx_4",
+    "accountId": "acc_2",
+    "description": "Transfer from Checking",
+    "amount": 500,
+    "date": "2026-04-10",
+    "category": "Transfer"
+  },
+  {
+    "id": "tx_5",
+    "accountId": "acc_3",
+    "description": "Delta Airlines",
+    "amount": -421.14,
+    "date": "2026-04-09",
+    "category": "Travel"
+  }
+]

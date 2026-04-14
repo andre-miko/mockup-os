@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist/.tsc-node",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@framework/*": ["framework/*"],
+      "@shell/*": ["shell/*"],
+      "@mockups/*": ["mockups/*"],
+      "@app/*": ["app/*"]
+    }
+  },
+  "include": ["vite.config.ts", "playwright.config.ts"]
+}

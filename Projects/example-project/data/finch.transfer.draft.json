@@ -1,0 +1,6 @@
+{
+  "fromAccountId": "acc_1",
+  "toAccountId": "acc_2",
+  "amount": 250,
+  "memo": "Monthly savings"
+}

@@ -1,0 +1,6 @@
+{
+  "id": "example-project",
+  "name": "Example Project (Finch)",
+  "description": "Reference mockup project — a simulated banking product used to demonstrate the Mockup OS conventions: screens, journeys, fixtures, permissions, sections, and handoff output.",
+  "version": "0.2.0"
+}

@@ -1,0 +1,49 @@
+# CODEOWNERS for Mockup OS
+#
+# Syntax: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-customizations/customizing-your-repository/about-code-owners
+#
+# Owners listed here are automatically requested for review on any PR that
+# touches matching paths. The LAST matching rule wins, so put broad defaults
+# first and sharpen for specific areas below.
+#
+# TODO: replace the placeholder team/handle below with the real Miko
+# maintainer team once the org is set up on GitHub. Examples:
+#   @miko/maintainers        — a team-level reviewer (preferred)
+#   @andre-smith             — an individual handle
+
+# Default owner for everything in the repo.
+*                                           @miko/maintainers
+
+# Core runtime — framework, shell, and app glue.
+/src/mockup-os/framework/                   @miko/maintainers
+/src/mockup-os/shell/                       @miko/maintainers
+/src/mockup-os/app/                         @miko/maintainers
+
+# The sidecar is security-sensitive (only file writer, handles AI calls).
+# Changes here should get extra eyes.
+/scripts/sidecar/                           @miko/maintainers
+
+# Build, validate, and handoff tooling.
+/scripts/build-docs.ts                      @miko/maintainers
+/scripts/build-handoff.ts                   @miko/maintainers
+/scripts/validate-registry.ts               @miko/maintainers
+
+# Agent and slash-command surface. Behaviour changes here propagate to
+# every session that uses Mockup OS with Claude.
+/.claude/                                   @miko/maintainers
+/CLAUDE.md                                  @miko/maintainers
+
+# Community-health and governance. Treat changes as significant.
+/README.md                                  @miko/maintainers
+/LICENSE                                    @miko/maintainers
+/CONTRIBUTING.md                            @miko/maintainers
+/SECURITY.md                                @miko/maintainers
+/GOVERNANCE.md                              @miko/maintainers
+/ROADMAP.md                                 @miko/maintainers
+/CHANGELOG.md                               @miko/maintainers
+/.github/                                   @miko/maintainers
+
+# Docs and example products can be reviewed by a broader group once
+# maintainers beyond the founding set exist. For now, same owner.
+/docs/                                      @miko/maintainers
+/Projects/                                  @miko/maintainers

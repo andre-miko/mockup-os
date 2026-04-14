@@ -1,0 +1,23 @@
+[
+  {
+    "id": "acc_1",
+    "name": "Everyday Checking",
+    "kind": "checking",
+    "balance": 4820.55,
+    "last4": "4021"
+  },
+  {
+    "id": "acc_2",
+    "name": "Emergency Savings",
+    "kind": "savings",
+    "balance": 18500,
+    "last4": "9911"
+  },
+  {
+    "id": "acc_3",
+    "name": "Travel Card",
+    "kind": "card",
+    "balance": -321.14,
+    "last4": "0044"
+  }
+]

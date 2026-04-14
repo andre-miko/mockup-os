@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "./dist/.tsc-app",
+    "rootDir": "../..",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@framework/*": ["framework/*"],
+      "@shell/*": ["shell/*"],
+      "@mockups/*": ["mockups/*"],
+      "@app/*": ["app/*"],
+      "@projects/*": ["../../Projects/*"]
+    },
+    "types": ["vite/client", "vitest/globals"]
+  },
+  "include": [
+    "app",
+    "framework",
+    "mockups",
+    "shell",
+    "tests",
+    "../../Projects/**/*.ts",
+    "../../Projects/**/*.tsx",
+    "../../Projects/**/*.json",
+    "../../scripts/sidecar/**/*.ts",
+    "../../scripts/lib/**/*.ts",
+    "../../scripts/build-handoff.ts",
+    "../../scripts/build-docs.ts",
+    "../../scripts/validate-registry.ts",
+    "../../scripts/snapshot-screens.ts"
+  ]
+}
