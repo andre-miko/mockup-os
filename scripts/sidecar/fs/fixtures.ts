@@ -2,8 +2,16 @@
  * Fixture file IO.
  *
  * Data lives at `Projects/<id>/data/<fixtureId>.json`. This module is the
- * only place that touches those files. Writes are atomic (write to tmp
- * then rename) so a Vite watcher never sees a half-written payload.
+ * only place that touches those files.
+ *
+ * We write directly with `writeFileSync` instead of the tmp-then-rename
+ * atomic pattern. On Windows, chokidar (what Vite's watcher uses) drops
+ * rename events frequently enough that the dev server never invalidates
+ * its transform cache for `projects.ts` — the page reloads but serves
+ * the old bundled JSON. A direct write produces a single "change" event
+ * that chokidar reports reliably. JSON payloads here are small and the
+ * write completes before any reader can observe a partial state in
+ * practice.
  *
  * The sidecar does NOT own the fixture *registration* — that's still
  * the project's `mockups/fixtures.ts`. We only rewrite the JSON payload;
@@ -15,7 +23,6 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
-  renameSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
@@ -84,10 +91,9 @@ export function readFixtureFile(projectId: string, fixtureId: string): unknown {
 }
 
 /**
- * Atomically write the given value as pretty JSON to
- * `data/<fixtureId>.json`. Creates the `data/` folder if missing. The
- * caller owns JSON parsing / schema validation; this function only does
- * the file IO.
+ * Write the given value as pretty JSON to `data/<fixtureId>.json`.
+ * Creates the `data/` folder if missing. The caller owns JSON parsing
+ * and schema validation; this function only does the file IO.
  */
 export function writeFixtureFile(
   projectId: string,
@@ -99,8 +105,6 @@ export function writeFixtureFile(
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 
   const body = JSON.stringify(data, null, 2) + '\n';
-  const tmp = `${path}.tmp-${process.pid}`;
-  writeFileSync(tmp, body, 'utf8');
-  renameSync(tmp, path);
+  writeFileSync(path, body, 'utf8');
   return { path, bytes: Buffer.byteLength(body, 'utf8') };
 }

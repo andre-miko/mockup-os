@@ -152,7 +152,7 @@ export const screens = [
     defaultStateId: 'default',
     fixtures: ['finch.accounts.default', 'finch.transfer.draft'],
     components: [{ id: 'card', name: 'Card', path: 'mockups/_system/ui.tsx' }],
-    status: 'approved',
+    status: "draft",
     version: '0.2.0',
     relatedScreens: ['finch.transfer.initiate', 'finch.transfer.confirmed'],
     knownGaps: [],

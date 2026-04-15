@@ -17,3 +17,8 @@ test-results
 artifacts/docs
 artifacts/handoff
 Projects/*/artifacts/
+
+# Stray tsc output inside authored projects — Vite resolves .js before .ts
+# and will render stale snapshots if these are allowed to exist.
+Projects/**/mockups/**/*.js
+Projects/**/mockups/**/*.d.ts

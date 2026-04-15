@@ -41,10 +41,18 @@ export function useScreenState(screenId: string): ScreenState | undefined {
 
 export function useFixture<T = unknown>(id: string): FixtureDefinition<T> | undefined {
   const projectId = useBuilderStore((s) => s.activeProjectId);
-  return useMemo(
-    () => getRegistry(projectId).getFixture(id) as FixtureDefinition<T> | undefined,
-    [projectId, id],
+  const override = useBuilderStore((s) =>
+    projectId ? s.fixtureOverrides[projectId]?.[id] : undefined,
   );
+  const hasOverride = useBuilderStore((s) =>
+    projectId ? id in (s.fixtureOverrides[projectId] ?? {}) : false,
+  );
+  return useMemo(() => {
+    const base = getRegistry(projectId).getFixture(id) as FixtureDefinition<T> | undefined;
+    if (!base) return undefined;
+    if (!hasOverride) return base;
+    return { ...base, data: override as T };
+  }, [projectId, id, override, hasOverride]);
 }
 
 /** True only when the builder is presenting the mockup as a real product. */

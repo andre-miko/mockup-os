@@ -117,6 +117,14 @@ interface BuilderState {
    * module reload.
    */
   optimisticStatus: Record<string, Record<string, ScreenStatus>>;
+  /**
+   * Per-project in-memory fixture data overrides. When present for a
+   * given fixture id, `useFixture` returns this instead of the bundled
+   * registry data — mockups re-render live as the user edits values in
+   * the Right-panel DataPanel. Disk is not touched unless the user
+   * explicitly saves.
+   */
+  fixtureOverrides: Record<string, Record<string, unknown>>;
   /** Active tab in the LeftPanel — lifted here so other panes can drive it. */
   leftPanelTab: LeftPanelTab;
   /** Persisted pixel widths for the left and right builder panels. */
@@ -132,6 +140,8 @@ interface BuilderState {
   resetPermission: (projectId: string, permissionId: string) => void;
   setOptimisticStatus: (projectId: string, screenId: string, status: ScreenStatus) => void;
   clearOptimisticStatus: (projectId: string, screenId: string) => void;
+  setFixtureOverride: (projectId: string, fixtureId: string, data: unknown) => void;
+  clearFixtureOverride: (projectId: string, fixtureId: string) => void;
   setLeftPanelTab: (tab: LeftPanelTab) => void;
   setLeftPanelWidth: (px: number) => void;
   setRightPanelWidth: (px: number) => void;
@@ -146,6 +156,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   activeProjectId: getDefaultProjectId(),
   permissionOverrides: {},
   optimisticStatus: {},
+  fixtureOverrides: {},
   leftPanelTab: loadLeftPanelTab(),
   leftPanelWidth: initialPanelWidths.leftPanelWidth,
   rightPanelWidth: initialPanelWidths.rightPanelWidth,
@@ -215,6 +226,24 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       delete per[screenId];
       return {
         optimisticStatus: { ...s.optimisticStatus, [projectId]: per },
+      };
+    }),
+  setFixtureOverride: (projectId, fixtureId, data) =>
+    set((s) => ({
+      fixtureOverrides: {
+        ...s.fixtureOverrides,
+        [projectId]: {
+          ...(s.fixtureOverrides[projectId] ?? {}),
+          [fixtureId]: data,
+        },
+      },
+    })),
+  clearFixtureOverride: (projectId, fixtureId) =>
+    set((s) => {
+      const per = { ...(s.fixtureOverrides[projectId] ?? {}) };
+      delete per[fixtureId];
+      return {
+        fixtureOverrides: { ...s.fixtureOverrides, [projectId]: per },
       };
     }),
   setLeftPanelTab: (tab) => {

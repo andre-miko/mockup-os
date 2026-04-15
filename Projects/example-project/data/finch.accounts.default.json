@@ -1,37 +1,23 @@
 [
   {
     "id": "acc_1",
-    "name": "Private Checking",
+    "name": "Everyday Barking",
     "kind": "checking",
-    "balance": 184320.17,
-    "last4": "4401"
+    "balance": 4820.55,
+    "last4": "4021"
   },
   {
     "id": "acc_2",
-    "name": "Treasury Savings",
+    "name": "Emergency Savings",
     "kind": "savings",
-    "balance": 925000,
-    "last4": "8812"
+    "balance": 18500,
+    "last4": "9911"
   },
   {
     "id": "acc_3",
-    "name": "Brokerage Link",
-    "kind": "savings",
-    "balance": 1450000,
-    "last4": "3377"
-  },
-  {
-    "id": "acc_4",
-    "name": "Platinum Card",
-    "kind": "card",
-    "balance": -14200.55,
-    "last4": "9090"
-  },
-  {
-    "id": "acc_5",
     "name": "Travel Card",
     "kind": "card",
-    "balance": -640,
-    "last4": "1212"
+    "balance": -321.14,
+    "last4": "0044"
   }
 ]

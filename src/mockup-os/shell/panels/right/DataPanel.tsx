@@ -1,5 +1,9 @@
 import { useState } from 'react';
+import clsx from 'clsx';
 import { useFixture } from '@framework/hooks';
+import { useBuilderStore } from '@framework/store';
+import { sidecar } from '@framework/sidecar-client';
+import { useSidecarHealth } from '@framework/sidecar-hooks';
 import type { ScreenDefinition } from '@framework/types';
 import { JsonTree, summariseJson } from '@shell/common/JsonTree';
 
@@ -8,7 +12,10 @@ import { JsonTree, summariseJson } from '@shell/common/JsonTree';
  *
  * Shows the data payload of every fixture the screen references. Each
  * fixture is an expandable section; once expanded, its JSON renders via
- * the shared `JsonTree` component.
+ * the shared `JsonTree` with inline editing. Edits land in the Zustand
+ * store as in-memory overrides, driving live re-renders across the
+ * viewport. Users can revert to the on-disk value or persist the override
+ * through the sidecar.
  */
 export function DataPanel({ screen }: { screen: ScreenDefinition }) {
   const fixtureIds = screen.fixtures ?? [];
@@ -30,7 +37,25 @@ export function DataPanel({ screen }: { screen: ScreenDefinition }) {
 
 function FixtureRow({ id }: { id: string }) {
   const fixture = useFixture<unknown>(id);
+  const projectId = useBuilderStore((s) => s.activeProjectId);
+  const override = useBuilderStore((s) =>
+    projectId ? s.fixtureOverrides[projectId]?.[id] : undefined,
+  );
+  const hasOverride = useBuilderStore((s) =>
+    projectId ? id in (s.fixtureOverrides[projectId] ?? {}) : false,
+  );
+  const setFixtureOverride = useBuilderStore((s) => s.setFixtureOverride);
+  const clearFixtureOverride = useBuilderStore((s) => s.clearFixtureOverride);
+  const { status: sidecarStatus } = useSidecarHealth();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
+  // After a successful save we remember which override-reference was
+  // persisted. If it still equals the live override we show "saved"
+  // instead of "edited"; any further edit produces a new reference and
+  // flips the badge back.
+  const [savedSnapshot, setSavedSnapshot] = useState<unknown>(undefined);
+  const isSaved = hasOverride && savedSnapshot !== undefined && override === savedSnapshot;
 
   if (!fixture) {
     return (
@@ -40,8 +65,72 @@ function FixtureRow({ id }: { id: string }) {
     );
   }
 
+  const sidecarOnline = sidecarStatus === 'online';
+
+  const onChange = (next: unknown) => {
+    if (!projectId) return;
+    setFixtureOverride(projectId, id, next);
+  };
+
+  const revert = () => {
+    if (!projectId) return;
+    clearFixtureOverride(projectId, id);
+    setNotice(null);
+  };
+
+  const saveToDisk = async () => {
+    if (!projectId || !sidecarOnline) return;
+    setSaving(true);
+    setNotice(null);
+    const payload = fixture.data;
+    const res = await sidecar.writeFixture(projectId, id, payload);
+    if (res.status !== 'ok') {
+      if (res.status === 'offline') {
+        setNotice({ kind: 'error', text: 'Sidecar offline.' });
+      } else {
+        setNotice({ kind: 'error', text: `Save failed: ${res.message}` });
+      }
+      setSaving(false);
+      return;
+    }
+    // Read back from disk to prove the write stuck — covers the case where
+    // a write returns ok but another process truncates or rewrites the
+    // file (or a user thinks "it didn't save" because they can't tell).
+    const verify = await sidecar.getFixture(projectId, id);
+    const expected = JSON.stringify(payload);
+    const onDisk =
+      verify.status === 'ok' ? JSON.stringify(verify.data.data) : undefined;
+    if (onDisk !== undefined && onDisk === expected) {
+      setSavedSnapshot(payload);
+      setNotice({
+        kind: 'info',
+        text: `Saved ${res.data.bytes} bytes — verified on disk.`,
+      });
+    } else if (verify.status === 'ok') {
+      setNotice({
+        kind: 'error',
+        text: 'Write reported success but the file on disk does not match.',
+      });
+    } else {
+      setNotice({
+        kind: 'info',
+        text: `Saved ${res.data.bytes} bytes. Could not read back to verify (${verify.status}).`,
+      });
+    }
+    setSaving(false);
+  };
+
   return (
-    <div className="rounded border border-shell-border bg-shell-bg">
+    <div
+      className={clsx(
+        'rounded border bg-shell-bg',
+        hasOverride
+          ? isSaved
+            ? 'border-emerald-400/40'
+            : 'border-amber-400/40'
+          : 'border-shell-border',
+      )}
+    >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -52,6 +141,16 @@ function FixtureRow({ id }: { id: string }) {
             {open ? '▾' : '▸'}
           </span>
           <span className="truncate font-mono text-shell-text">{id}</span>
+          {hasOverride &&
+            (isSaved ? (
+              <span className="shrink-0 rounded bg-emerald-400/15 px-1 font-mono text-[9px] uppercase tracking-wider text-emerald-300">
+                saved
+              </span>
+            ) : (
+              <span className="shrink-0 rounded bg-amber-400/15 px-1 font-mono text-[9px] uppercase tracking-wider text-amber-300">
+                edited
+              </span>
+            ))}
         </span>
         <span className="shrink-0 font-mono text-[10px] text-shell-muted">
           {summariseJson(fixture.data)}
@@ -64,7 +163,44 @@ function FixtureRow({ id }: { id: string }) {
               {fixture.description}
             </div>
           )}
-          <JsonTree value={fixture.data} />
+          <JsonTree value={fixture.data} onChange={onChange} />
+          {hasOverride && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <button
+                type="button"
+                onClick={revert}
+                className="rounded border border-shell-border px-2 py-0.5 text-[10px] text-shell-text hover:bg-white/5"
+              >
+                Revert
+              </button>
+              <button
+                type="button"
+                onClick={saveToDisk}
+                disabled={saving || !sidecarOnline}
+                title={!sidecarOnline ? 'Sidecar offline — run `npm run sidecar`' : undefined}
+                className={clsx(
+                  'rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
+                  sidecarOnline && !saving
+                    ? 'text-shell-text hover:bg-white/5'
+                    : 'cursor-not-allowed text-shell-muted',
+                )}
+              >
+                {saving ? 'Saving…' : 'Save to disk'}
+              </button>
+            </div>
+          )}
+          {notice && (
+            <div
+              className={clsx(
+                'mt-2 rounded px-2 py-1 text-[10px] leading-snug',
+                notice.kind === 'error'
+                  ? 'border border-rose-500/40 bg-rose-500/10 text-rose-300'
+                  : 'border border-shell-border bg-white/5 text-shell-muted',
+              )}
+            >
+              {notice.text}
+            </div>
+          )}
         </div>
       )}
     </div>
