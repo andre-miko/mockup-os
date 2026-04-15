@@ -68,35 +68,18 @@ export function StatesPanel({ screen }: { screen: ScreenDefinition }) {
         ))}
       </div>
 
-      {active && (
-        <div className="mt-2 rounded border border-shell-border bg-shell-bg px-2 py-1.5 text-[11px] leading-snug">
-          {activeFixtures.length === 0 ? (
-            <div className="text-shell-muted">No fixtures bound to this state.</div>
-          ) : (
-            <div className="text-shell-muted">
-              Fixtures:{' '}
-              {activeFixtures.map((f, i) => (
-                <span key={f}>
-                  <span className="font-mono text-shell-text">{f}</span>
-                  {i < activeFixtures.length - 1 ? ', ' : ''}
-                </span>
-              ))}
-            </div>
-          )}
-          {!isDefault && (added.length > 0 || removed.length > 0) && (
-            <div className="mt-1.5 flex flex-wrap gap-1 font-mono text-[10px]">
-              {added.map((f) => (
-                <span key={`+${f}`} className="rounded bg-emerald-500/10 px-1 py-0.5 text-emerald-300">
-                  +{f}
-                </span>
-              ))}
-              {removed.map((f) => (
-                <span key={`-${f}`} className="rounded bg-rose-500/10 px-1 py-0.5 text-rose-300">
-                  −{f}
-                </span>
-              ))}
-            </div>
-          )}
+      {active && !isDefault && (added.length > 0 || removed.length > 0) && (
+        <div className="mt-2 flex flex-wrap gap-1 font-mono text-[10px]">
+          {added.map((f) => (
+            <span key={`+${f}`} className="rounded bg-emerald-500/10 px-1 py-0.5 text-emerald-300">
+              +{f}
+            </span>
+          ))}
+          {removed.map((f) => (
+            <span key={`-${f}`} className="rounded bg-rose-500/10 px-1 py-0.5 text-rose-300">
+              −{f}
+            </span>
+          ))}
         </div>
       )}
     </section>

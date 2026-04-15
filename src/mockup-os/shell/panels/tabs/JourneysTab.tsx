@@ -1,8 +1,9 @@
-import { useMemo, useState, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { getRegistry } from '@framework/registry';
 import { useActiveProjectId } from '@framework/hooks';
+import { useBuilderStore } from '@framework/store';
 import type { JourneyDefinition, ScreenDefinition } from '@framework/types';
 import { TreeView, type TreeNodeShape } from '@shell/common/TreeView';
 import { ContextMenu, type ContextMenuPosition } from '@shell/common/ContextMenu';
@@ -32,8 +33,26 @@ export function JourneysTab({ query }: { query: string }) {
   const projectId = useActiveProjectId();
   const registry = useMemo(() => getRegistry(projectId), [projectId]);
   const actions = useScreenActions();
+  const journeyFocus = useBuilderStore((s) => s.journeyFocus);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const [menu, setMenu] = useState<MenuState | null>(null);
+
+  // Row id the right-panel Journeys link asked us to focus.
+  const focusedRowId = journeyFocus
+    ? `screen:${journeyFocus.screenId}::${journeyFocus.journeyId}`
+    : undefined;
+
+  // When the focus changes, scroll the matching row into view. The
+  // TreeView already default-expands every journey, so the button should
+  // be in the DOM by the time this effect runs.
+  useEffect(() => {
+    if (!focusedRowId || !containerRef.current) return;
+    const el = containerRef.current.querySelector<HTMLElement>(
+      `[data-tv-id="${CSS.escape(focusedRowId)}"]`,
+    );
+    if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [focusedRowId]);
 
   const openMenu = (e: MouseEvent, screen: ScreenDefinition, journeyId?: string) => {
     e.preventDefault();
@@ -72,10 +91,11 @@ export function JourneysTab({ query }: { query: string }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto p-2">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-2">
         <TreeView
           nodes={tree}
           onSelect={handleSelect}
+          selectedId={focusedRowId}
           emptyMessage={query ? 'No matches.' : 'No journeys defined yet.'}
         />
       </div>

@@ -127,6 +127,12 @@ interface BuilderState {
   fixtureOverrides: Record<string, Record<string, unknown>>;
   /** Active tab in the LeftPanel — lifted here so other panes can drive it. */
   leftPanelTab: LeftPanelTab;
+  /**
+   * Transient focus target for the Journeys tab. Written by the right-panel
+   * Journeys link so the tree can highlight and scroll the matching step.
+   * Consumers read once on mount / change; writers don't need to clear it.
+   */
+  journeyFocus: { journeyId: string; screenId: string } | undefined;
   /** Persisted pixel widths for the left and right builder panels. */
   leftPanelWidth: number;
   rightPanelWidth: number;
@@ -143,6 +149,7 @@ interface BuilderState {
   setFixtureOverride: (projectId: string, fixtureId: string, data: unknown) => void;
   clearFixtureOverride: (projectId: string, fixtureId: string) => void;
   setLeftPanelTab: (tab: LeftPanelTab) => void;
+  setJourneyFocus: (focus: { journeyId: string; screenId: string } | undefined) => void;
   setLeftPanelWidth: (px: number) => void;
   setRightPanelWidth: (px: number) => void;
 }
@@ -158,6 +165,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   optimisticStatus: {},
   fixtureOverrides: {},
   leftPanelTab: loadLeftPanelTab(),
+  journeyFocus: undefined,
   leftPanelWidth: initialPanelWidths.leftPanelWidth,
   rightPanelWidth: initialPanelWidths.rightPanelWidth,
 
@@ -250,6 +258,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
     saveLeftPanelTab(tab);
     set({ leftPanelTab: tab });
   },
+  setJourneyFocus: (focus) => set({ journeyFocus: focus }),
   setLeftPanelWidth: (px) =>
     set((s) => {
       const next = clampPanelWidth('left', px);

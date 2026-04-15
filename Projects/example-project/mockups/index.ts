@@ -56,12 +56,22 @@ export const screens = [
     version: '0.2.0',
     relatedScreens: ['finch.accounts.list', 'finch.transfer.initiate'],
     knownGaps: [
-      {
-        id: 'overview.loading',
-        description: 'Skeleton loading state has not been designed.',
-        severity: 'warn',
-      },
-    ],
+          {
+            id: "overview.loading",
+            description: "Skeleton loading state has not been designed.",
+            severity: "warn",
+          },
+          {
+            id: "gap.2f560r",
+            description: "this is info",
+            severity: "info",
+          },
+          {
+            id: "gap.fn5kwp",
+            description: "iu dono",
+            severity: "info",
+          },
+        ],
     sections: ['overview'],
     component: Overview,
   }),

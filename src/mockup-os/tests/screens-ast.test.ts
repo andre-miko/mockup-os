@@ -15,7 +15,9 @@ import {
   ScreenNotFoundError,
   deleteScreen,
   duplicateScreen,
+  setScreenKnownGaps,
   setScreenStatus,
+  setScreenStringField,
 } from '../../../scripts/sidecar/fs/screens-ast';
 
 const FIXTURE_INDEX = `import { defineScreen } from '@framework/defineScreen';
@@ -128,6 +130,81 @@ describe('screens-ast', () => {
 
     it('throws ScreenNotFoundError when the id is missing', () => {
       expect(() => deleteScreen(projectRoot, 'nope')).toThrow(ScreenNotFoundError);
+    });
+  });
+
+  describe('setScreenStringField', () => {
+    it('rewrites the title property', () => {
+      const result = setScreenStringField(projectRoot, 'app.foo', 'title', 'Foo Renamed');
+      expect(result.previousValue).toBe('Foo');
+      expect(result.newValue).toBe('Foo Renamed');
+      expect(read()).toContain('title: "Foo Renamed"');
+    });
+
+    it('rewrites the description property and preserves other screens', () => {
+      setScreenStringField(projectRoot, 'app.bar', 'description', 'Bar details');
+      const text = read();
+      expect(text).toContain('description: "Bar details"');
+      expect(text).toContain("id: 'app.foo'");
+    });
+
+    it('rejects unknown fields', () => {
+      expect(() =>
+        setScreenStringField(projectRoot, 'app.foo', 'layoutFamily', 'auth'),
+      ).toThrow(/invalid field/);
+    });
+
+    it('throws ScreenNotFoundError for unknown ids', () => {
+      expect(() =>
+        setScreenStringField(projectRoot, 'app.ghost', 'title', 'x'),
+      ).toThrow(ScreenNotFoundError);
+    });
+  });
+
+  describe('setScreenKnownGaps', () => {
+    it('replaces an empty list with structured entries', () => {
+      const result = setScreenKnownGaps(projectRoot, 'app.foo', [
+        { id: 'gap.loading', description: 'no loader', severity: 'warn' },
+        { id: 'gap.empty', description: 'no empty state', severity: 'info' },
+      ]);
+      expect(result.count).toBe(2);
+      const text = read();
+      expect(text).toContain('id: "gap.loading"');
+      expect(text).toContain('description: "no loader"');
+      expect(text).toContain('severity: "warn"');
+      expect(text).toContain('id: "gap.empty"');
+    });
+
+    it('rewrites an existing list back to empty', () => {
+      setScreenKnownGaps(projectRoot, 'app.foo', [
+        { id: 'gap.x', description: 'x', severity: 'info' },
+      ]);
+      setScreenKnownGaps(projectRoot, 'app.foo', []);
+      const text = read();
+      expect(text).not.toContain('gap.x');
+      expect(text).toMatch(/knownGaps:\s*\[\]/);
+    });
+
+    it('rejects an invalid severity', () => {
+      expect(() =>
+        setScreenKnownGaps(projectRoot, 'app.foo', [
+          {
+            id: 'gap.bad',
+            description: 'x',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            severity: 'critical' as any,
+          },
+        ]),
+      ).toThrow(/invalid severity/);
+    });
+
+    it('rejects duplicate ids', () => {
+      expect(() =>
+        setScreenKnownGaps(projectRoot, 'app.foo', [
+          { id: 'gap.dup', description: 'a', severity: 'info' },
+          { id: 'gap.dup', description: 'b', severity: 'info' },
+        ]),
+      ).toThrow(/duplicate/);
     });
   });
 

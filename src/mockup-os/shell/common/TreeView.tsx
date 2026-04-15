@@ -141,6 +141,7 @@ function TreeRow({ node, depth, expanded, toggle, selectedId, onSelect }: TreeRo
             onSelect?.(node.id, node);
           }}
           onKeyDown={handleKeyDown}
+          data-tv-id={node.id}
           className="flex min-w-0 flex-1 items-center gap-1.5 bg-transparent px-1.5 py-1 text-left text-[12px] text-inherit"
           style={{ paddingLeft: `${6 + depth * 12}px` }}
         >

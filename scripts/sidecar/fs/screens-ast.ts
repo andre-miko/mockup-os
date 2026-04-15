@@ -232,6 +232,108 @@ export function setScreenStatus(
   return { screenId, previousStatus, newStatus, rewrotePath: source.getFilePath() };
 }
 
+export interface SetStringFieldResult {
+  screenId: string;
+  field: string;
+  previousValue: string | undefined;
+  newValue: string;
+  rewrotePath: string;
+}
+
+/**
+ * Update a plain string property on a screen (title, description, …).
+ * The caller is trusted to pass a field name this object actually carries;
+ * an unknown name is appended rather than rejected so future-added fields
+ * don't need a code change here.
+ */
+export function setScreenStringField(
+  projectRoot: string,
+  screenId: string,
+  field: string,
+  newValue: string,
+): SetStringFieldResult {
+  const allowed = ['title', 'description'];
+  if (!allowed.includes(field)) {
+    throw new Error(`invalid field "${field}" — allowed: ${allowed.join(', ')}`);
+  }
+  const { source, array } = loadIndex(projectRoot);
+  const target = findById(array, screenId);
+  const previousValue = getStringProp(target.obj, field);
+  setStringProp(target.obj, field, newValue);
+  source.saveSync();
+  return { screenId, field, previousValue, newValue, rewrotePath: source.getFilePath() };
+}
+
+export interface KnownGapInput {
+  id: string;
+  description: string;
+  severity: 'info' | 'warn' | 'blocker';
+}
+
+export interface SetKnownGapsResult {
+  screenId: string;
+  count: number;
+  rewrotePath: string;
+}
+
+/**
+ * Replace a screen's `knownGaps` array wholesale. We rewrite the initializer
+ * as generated text rather than mutating existing elements so the old array
+ * layout (inline empty vs multi-line with entries) lines up with the new
+ * content automatically.
+ */
+export function setScreenKnownGaps(
+  projectRoot: string,
+  screenId: string,
+  gaps: KnownGapInput[],
+): SetKnownGapsResult {
+  const allowedSeverity = new Set(['info', 'warn', 'blocker']);
+  for (const g of gaps) {
+    if (typeof g.id !== 'string' || !g.id) {
+      throw new Error('every known-gap entry needs a non-empty id');
+    }
+    if (typeof g.description !== 'string') {
+      throw new Error('every known-gap entry needs a description');
+    }
+    if (!allowedSeverity.has(g.severity)) {
+      throw new Error(`invalid severity "${g.severity}" — allowed: info, warn, blocker`);
+    }
+  }
+  const seenIds = new Set<string>();
+  for (const g of gaps) {
+    if (seenIds.has(g.id)) throw new Error(`duplicate known-gap id "${g.id}"`);
+    seenIds.add(g.id);
+  }
+
+  const { source, array } = loadIndex(projectRoot);
+  const target = findById(array, screenId);
+  const initText = renderKnownGapsInitializer(gaps);
+
+  const prop = target.obj.getProperty('knownGaps');
+  if (prop && prop.getKind() === SyntaxKind.PropertyAssignment) {
+    (prop as PropertyAssignment).setInitializer(initText);
+  } else {
+    target.obj.addPropertyAssignment({ name: 'knownGaps', initializer: initText });
+  }
+
+  source.saveSync();
+  return { screenId, count: gaps.length, rewrotePath: source.getFilePath() };
+}
+
+function renderKnownGapsInitializer(gaps: KnownGapInput[]): string {
+  if (gaps.length === 0) return '[]';
+  const lines = gaps.map((g) => {
+    return [
+      '  {',
+      `    id: ${JSON.stringify(g.id)},`,
+      `    description: ${JSON.stringify(g.description)},`,
+      `    severity: ${JSON.stringify(g.severity)},`,
+      '  }',
+    ].join('\n');
+  });
+  return `[\n${lines.join(',\n')},\n]`;
+}
+
 // ─── helpers ────────────────────────────────────────────────────────
 
 function nextAvailable(

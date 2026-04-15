@@ -96,6 +96,26 @@ export interface SetScreenStatusResult {
   reviewLogPath: string;
 }
 
+export interface SetScreenFieldResult {
+  screenId: string;
+  field: string;
+  previousValue: string | undefined;
+  newValue: string;
+  rewrotePath: string;
+}
+
+export interface KnownGapPayload {
+  id: string;
+  description: string;
+  severity: 'info' | 'warn' | 'blocker';
+}
+
+export interface SetKnownGapsResult {
+  screenId: string;
+  count: number;
+  rewrotePath: string;
+}
+
 export interface FixtureFileSummary {
   id: string;
   path: string;
@@ -203,6 +223,29 @@ export const sidecar = {
     return fetchJson<SetScreenStatusResult>(
       `/api/projects/${encodeURIComponent(projectId)}/screens/${encodeURIComponent(screenId)}/status`,
       { method: 'POST', body: JSON.stringify({ status }) },
+    );
+  },
+
+  setScreenField(
+    projectId: string,
+    screenId: string,
+    field: 'title' | 'description',
+    value: string,
+  ): Promise<SidecarResult<SetScreenFieldResult>> {
+    return fetchJson<SetScreenFieldResult>(
+      `/api/projects/${encodeURIComponent(projectId)}/screens/${encodeURIComponent(screenId)}/field`,
+      { method: 'POST', body: JSON.stringify({ field, value }) },
+    );
+  },
+
+  setScreenKnownGaps(
+    projectId: string,
+    screenId: string,
+    gaps: KnownGapPayload[],
+  ): Promise<SidecarResult<SetKnownGapsResult>> {
+    return fetchJson<SetKnownGapsResult>(
+      `/api/projects/${encodeURIComponent(projectId)}/screens/${encodeURIComponent(screenId)}/known-gaps`,
+      { method: 'POST', body: JSON.stringify({ gaps }) },
     );
   },
 

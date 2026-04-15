@@ -4,12 +4,15 @@ import clsx from 'clsx';
 import { getRegistry } from '@framework/registry';
 import { useActiveProjectId } from '@framework/hooks';
 import { useBuilderStore } from '@framework/store';
+import { sidecar } from '@framework/sidecar-client';
 import type { ScreenDefinition } from '@framework/types';
 import { PermissionsPanel } from './right/PermissionsPanel';
 import { StatusDropdown } from './right/StatusDropdown';
 import { StatesPanel } from './right/StatesPanel';
 import { DataPanel } from './right/DataPanel';
 import { JourneyMembership } from './right/JourneyMembership';
+import { KnownGapsPanel } from './right/KnownGapsPanel';
+import { InlineEdit } from './right/InlineEdit';
 import { PanelResizer } from '../common/PanelResizer';
 
 /**
@@ -51,7 +54,7 @@ export function RightPanel() {
       {/* Overview — title, route, status, badges */}
       <div className="border-b border-shell-border p-4">
         <div className="text-[10px] uppercase tracking-wider text-shell-muted">Screen</div>
-        <div className="text-sm font-semibold">{screen.title}</div>
+        <ScreenTitleField screen={screen} projectId={projectId} />
         <div className="mt-0.5 font-mono text-[11px] text-shell-muted">{screen.route}</div>
         <div className="mt-2 flex flex-wrap items-center gap-1">
           <StatusDropdown screen={screen} />
@@ -59,9 +62,9 @@ export function RightPanel() {
           <Badge>{screen.viewport}</Badge>
           <Badge>v{screen.version}</Badge>
         </div>
-        {screen.description && (
-          <p className="mt-2 text-xs text-shell-muted">{screen.description}</p>
-        )}
+        <div className="mt-2">
+          <ScreenDescriptionField screen={screen} projectId={projectId} />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 text-sm">
@@ -75,7 +78,7 @@ export function RightPanel() {
 
         <RelatedSection screen={screen} registry={registry} />
 
-        <KnownGapsSection screen={screen} />
+        <KnownGapsPanel screen={screen} />
 
         <ComponentsSection screen={screen} />
       </div>
@@ -94,10 +97,21 @@ function RelatedSection({
   registry: ReturnType<typeof getRegistry>;
 }) {
   if (screen.relatedScreens.length === 0) return null;
+  // Any screen the user can already reach via a shared journey is listed in
+  // JourneyMembership — filtering them here kills the duplication while
+  // preserving the escape hatch for cross-journey links.
+  const journeyReachable = new Set<string>();
+  for (const j of registry.journeys) {
+    if (j.steps.includes(screen.id)) {
+      for (const step of j.steps) if (step !== screen.id) journeyReachable.add(step);
+    }
+  }
+  const uniqueRelated = screen.relatedScreens.filter((id) => !journeyReachable.has(id));
+  if (uniqueRelated.length === 0) return null;
   return (
     <Section title="Related">
       <ul className="space-y-1">
-        {screen.relatedScreens.map((id) => {
+        {uniqueRelated.map((id) => {
           const rel = registry.getScreen(id);
           if (!rel) {
             return (
@@ -119,19 +133,61 @@ function RelatedSection({
   );
 }
 
-function KnownGapsSection({ screen }: { screen: ScreenDefinition }) {
-  if (screen.knownGaps.length === 0) return null;
+function ScreenTitleField({
+  screen,
+  projectId,
+}: {
+  screen: ScreenDefinition;
+  projectId: string | undefined;
+}) {
+  const save = async (next: string) => {
+    if (!projectId) return { ok: false as const, message: 'No active project.' };
+    const trimmed = next.trim();
+    if (!trimmed) return { ok: false as const, message: 'Title can’t be empty.' };
+    const res = await sidecar.setScreenField(projectId, screen.id, 'title', trimmed);
+    if (res.status === 'ok') return { ok: true as const };
+    return {
+      ok: false as const,
+      message:
+        res.status === 'offline' ? 'Sidecar offline — run `npm run sidecar`.' : res.message,
+    };
+  };
   return (
-    <Section title="Known gaps">
-      <ul className="space-y-1">
-        {screen.knownGaps.map((g) => (
-          <li key={g.id} className="text-xs">
-            <Badge tone={g.severity}>{g.severity}</Badge>{' '}
-            <span className="text-shell-muted">{g.description}</span>
-          </li>
-        ))}
-      </ul>
-    </Section>
+    <InlineEdit
+      value={screen.title}
+      onSave={save}
+      displayClassName="text-sm font-semibold"
+      title="Click to rename"
+    />
+  );
+}
+
+function ScreenDescriptionField({
+  screen,
+  projectId,
+}: {
+  screen: ScreenDefinition;
+  projectId: string | undefined;
+}) {
+  const save = async (next: string) => {
+    if (!projectId) return { ok: false as const, message: 'No active project.' };
+    const res = await sidecar.setScreenField(projectId, screen.id, 'description', next);
+    if (res.status === 'ok') return { ok: true as const };
+    return {
+      ok: false as const,
+      message:
+        res.status === 'offline' ? 'Sidecar offline — run `npm run sidecar`.' : res.message,
+    };
+  };
+  return (
+    <InlineEdit
+      value={screen.description}
+      onSave={save}
+      multiline
+      emptyLabel="Click to add a description…"
+      displayClassName="text-xs text-shell-muted"
+      title="Click to edit description"
+    />
   );
 }
 
