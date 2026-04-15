@@ -21,6 +21,7 @@ interface PendingState {
   events: AiEvent[];
   status: 'streaming' | 'done' | 'error' | 'aborted';
   controller: AbortController | null;
+  startedAt: number;
 }
 
 export function PromptBar() {
@@ -48,7 +49,9 @@ export function PromptBar() {
     };
   }, [projectId]);
 
-  const canSend = !!projectId && aiStatus?.configured && draft.trim().length > 0 && !pending;
+  const streaming = pending?.status === 'streaming';
+  const canSend =
+    !!projectId && aiStatus?.configured && draft.trim().length > 0 && !streaming;
 
   const send = async () => {
     if (!canSend || !projectId) return;
@@ -59,6 +62,7 @@ export function PromptBar() {
       events: [],
       status: 'streaming',
       controller,
+      startedAt: Date.now(),
     };
     setPending(initial);
     setDrawerOpen(true);
@@ -154,7 +158,11 @@ export function PromptBar() {
       </div>
 
       {pending && drawerOpen && (
-        <PromptDrawer pending={pending} onClose={() => setDrawerOpen(false)} />
+        <PromptDrawer
+          pending={pending}
+          backend={aiStatus?.backend}
+          onClose={() => setDrawerOpen(false)}
+        />
       )}
     </div>
   );
@@ -186,9 +194,11 @@ function BackendPill({ status }: { status: AiStatus | null }) {
 
 function PromptDrawer({
   pending,
+  backend,
   onClose,
 }: {
   pending: PendingState;
+  backend?: AiStatus['backend'];
   onClose: () => void;
 }) {
   const meta = pending.events.find((e) => e.type === 'meta')?.data as
@@ -226,17 +236,57 @@ function PromptDrawer({
         </div>
       </div>
       <div className="max-h-64 overflow-y-auto whitespace-pre-wrap px-3 pb-3 font-mono text-[11.5px] leading-relaxed text-shell-text">
-        {pending.text || (
-          <span className="text-shell-muted">
-            {pending.status === 'streaming' ? 'Waiting for first chunk…' : '(no output)'}
-          </span>
-        )}
+        {pending.text ||
+          (pending.status === 'streaming' ? (
+            <WaitingIndicator startedAt={pending.startedAt} backend={backend} />
+          ) : (
+            <span className="text-shell-muted">(no output)</span>
+          ))}
         {error && (
           <div className="mt-2 rounded border border-rose-500/40 bg-rose-500/10 p-2 text-rose-300">
             {error.text ?? error.code ?? 'Error'}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+const SLOW_HINT_AFTER_MS = 10_000;
+
+function WaitingIndicator({
+  startedAt,
+  backend,
+}: {
+  startedAt: number;
+  backend?: AiStatus['backend'];
+}) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 100);
+    return () => window.clearInterval(id);
+  }, []);
+  const elapsedMs = Date.now() - startedAt;
+  const elapsedSec = Math.floor(elapsedMs / 1000);
+  const frame = SPINNER_FRAMES[tick % SPINNER_FRAMES.length];
+  const showSlowHint = elapsedMs >= SLOW_HINT_AFTER_MS && backend === 'claude-code';
+  return (
+    <div className="text-shell-muted">
+      <span>
+        <span className="text-shell-accent" aria-hidden>
+          {frame}
+        </span>{' '}
+        Waiting for first chunk… <span className="tabular-nums">{elapsedSec}s</span>
+      </span>
+      {showSlowHint && (
+        <div className="mt-2 rounded border border-shell-border bg-white/5 px-2 py-1 text-[10.5px] leading-snug">
+          The <code>claude-code</code> backend spawns the CLI per prompt, which adds
+          startup overhead. For lower latency, switch the project to the{' '}
+          <code>anthropic</code> backend (direct API) and set{' '}
+          <code>ANTHROPIC_API_KEY</code>.
+        </div>
+      )}
     </div>
   );
 }

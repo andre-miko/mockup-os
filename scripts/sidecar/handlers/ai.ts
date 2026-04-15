@@ -19,6 +19,43 @@ interface GenerateDataBody {
 
 const NDJSON_CONTENT_TYPE = 'application/x-ndjson';
 
+// Writing via `reply.raw` bypasses Fastify's reply pipeline, so headers
+// staged by plugins (notably @fastify/cors) aren't sent. We mirror the
+// cors allowlist here — any localhost origin gets echoed back — and flush
+// directly. Without this, the browser rejects the streaming response with
+// a CORS error that surfaces client-side as "Sidecar unreachable".
+function flushStreamingHeaders(
+  req: { headers: { origin?: string | string[] } },
+  reply: {
+    getHeaders: () => Record<string, unknown>;
+    raw: {
+      setHeader: (k: string, v: string | number | readonly string[]) => void;
+      flushHeaders?: () => void;
+    };
+  },
+): void {
+  for (const [key, value] of Object.entries(reply.getHeaders())) {
+    if (value === undefined || value === null) continue;
+    reply.raw.setHeader(key, value as string | number | readonly string[]);
+  }
+  const originHeader = req.headers.origin;
+  const origin = Array.isArray(originHeader) ? originHeader[0] : originHeader;
+  if (origin) {
+    try {
+      const u = new URL(origin);
+      if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+        reply.raw.setHeader('Access-Control-Allow-Origin', origin);
+        reply.raw.setHeader('Vary', 'Origin');
+      }
+    } catch {
+      // ignore malformed origin
+    }
+  }
+  reply.raw.setHeader('Content-Type', NDJSON_CONTENT_TYPE);
+  reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
+  reply.raw.flushHeaders?.();
+}
+
 export function registerAi(app: FastifyInstance): void {
   // GET /api/projects/:id/ai/status — used by the PromptBar to decide
   // whether to render an active textarea or a disabled one.
@@ -57,9 +94,7 @@ export function registerAi(app: FastifyInstance): void {
 
       // Switch to raw streaming mode. We bypass Fastify's serializer so
       // we can write NDJSON line-by-line as the adapter emits.
-      reply.raw.setHeader('Content-Type', NDJSON_CONTENT_TYPE);
-      reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
-      reply.raw.flushHeaders?.();
+      flushStreamingHeaders(req, reply);
 
       const controller = new AbortController();
       req.raw.on('close', () => controller.abort());
@@ -123,9 +158,7 @@ export function registerAi(app: FastifyInstance): void {
         'Return ONLY the JSON value.',
       ].join('\n\n');
 
-      reply.raw.setHeader('Content-Type', NDJSON_CONTENT_TYPE);
-      reply.raw.setHeader('Cache-Control', 'no-cache, no-transform');
-      reply.raw.flushHeaders?.();
+      flushStreamingHeaders(req, reply);
 
       const controller = new AbortController();
       req.raw.on('close', () => controller.abort());
