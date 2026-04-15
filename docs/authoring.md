@@ -67,3 +67,18 @@ npm run docs:build
 ## Using fixtures and state
 
 Inside a screen, call `useScreenState(screenId)` to react to the currently selected state, and `useFixture(id)` to pull fixture data. Mockups **must not** depend on the shell's zustand store directly.
+
+## Editing from the running shell
+
+Most metadata can also be edited from the right-panel inspector while `npm run dev:all` is running:
+
+- **Status** — set via the status dropdown. Writes through the sidecar as an AST mutation of `mockups/index.ts`.
+- **Known gaps** — add, edit, or remove inline via the Known Gaps panel.
+- **Fixtures** — edit JSON in place in the Data panel. Edits take effect immediately via in-memory overrides; "Save" persists to `data/<fid>.json` through the sidecar, "Revert" clears the override.
+- **Duplicate / delete** — buttons on the screen header run AST-safe CRUD through the sidecar; formatting and comments are preserved.
+
+All of these operations go through `scripts/sidecar/`. The frontend never touches `node:fs` directly.
+
+## Ghost screens
+
+If you list a route in `docs/sitemap.md` that doesn't yet have a `defineScreen(...)` entry, the router renders a "✨ Proposed screen" placeholder. That's the integration point for `/new-screen` — the agent reads the sitemap entry and scaffolds the real screen in place.

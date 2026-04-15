@@ -80,7 +80,11 @@ Two non-negotiables:
 
 ## Status
 
-Phases 0–10 complete (multi-project, sidecar, AI adapter, all 5 left-panel
-tabs, full right-panel inspector, ts-morph CRUD on screens, `.claude/`
-agents/commands/skills). Phase 11 (handoff v2 with snapshots + README +
-brief lock) is pending.
+Phases 0–11 on `main` (multi-project, sidecar, AI adapter, all 5 left-panel
+tabs, full right-panel inspector with inline known-gaps and fixture
+overrides, ts-morph CRUD on screens, `.claude/` agents/commands/skills,
+handoff v2 snapshots + embedded README + brief lock, preflight gate,
+ghost-screen placeholder, panel resizer, second seed product
+`habit-tracker`). Remaining for v0.2: handoff token map + component
+index, handoff diff tool (`v<n-1>` vs `v<n>`), DOM/computed-styles capture
+alongside PNGs.

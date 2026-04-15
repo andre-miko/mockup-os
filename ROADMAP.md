@@ -21,11 +21,17 @@ The goal of v0.1 is to get the project into a state where a curious stranger can
 - [x] Fastify sidecar as the sole file writer.
 - [x] `defineScreen(...)` registry and validator.
 - [x] `.claude/` agents, slash commands, and skills.
-- [x] Left panel (all five tabs) and right panel inspector.
+- [x] Left panel — all five tabs (sitemap, journeys, patterns, data, brief) functional, including the "Expand with AI" brief flow and the Data tab's generate / regenerate actions.
+- [x] Right panel inspector — states, data (with inline JSON editing and fixture overrides), permissions, journey membership, known gaps (inline-editable), and status dropdown.
+- [x] ts-morph-based screen CRUD (duplicate / delete / set status / edit known gaps) mediated by the sidecar.
 - [x] Handoff v1 per project under `artifacts/handoff/v<n>/`.
 - [x] Example product: `example-project` (a simulated consumer banking product, branded "Finch" internally).
+- [x] Seed of a second example product: `Projects/habit-tracker/` ("Sprout") — enough to exercise multi-project switching; full fleshing out tracked under v0.3.
+- [x] Ghost screen placeholder in the router for sitemap entries that aren't yet registered.
+- [x] Panel resizer with persisted widths.
+- [x] Preflight check script (`npm run preflight`) covering typecheck, lint, vitest, registry validation with a negative test, isolation rules, and optional sidecar probes.
 - [x] Community-health files: `README`, `LICENSE`, `CONTRIBUTING`, `SECURITY`, `GOVERNANCE`, `ROADMAP`, `CHANGELOG`, `CODEOWNERS`.
-- [ ] Manual verification pass across every feature (see [CHECKLIST.md](CHECKLIST.md)).
+- [ ] Manual verification pass across every feature in a dev session.
 - [ ] Screenshot and a short recording of builder → presentation → handoff.
 - [ ] First tagged release on GitHub.
 
@@ -42,9 +48,10 @@ The handoff pack is currently minimal. v0.2 makes it genuinely useful for a down
 
 ## v0.3 — Example breadth (next)
 
-One example product isn't enough to prove the framework generalises. v0.3 adds a second product that exercises different layout families.
+One example product isn't enough to prove the framework generalises. v0.3 fleshes out the seed `habit-tracker` (or adds another product) to exercise a genuinely different layout family.
 
-- [ ] Second example product — candidate: a B2B admin console or a mobile-first consumer app.
+- [x] Seed of a second example product (`Projects/habit-tracker/`, branded "Sprout"): two implemented screens, one fixture, a layout, and a `project.config.ts`. Ships now to exercise project switching.
+- [ ] Build it out: more screens, richer fixtures, a layout family that is genuinely different from `example-project` (candidates: B2B admin console, mobile-first consumer app, developer tool).
 - [ ] Promotion of any shared patterns discovered during that work into `mockups/_system/`.
 - [ ] Documentation: "How to start a new product" worked walkthrough.
 

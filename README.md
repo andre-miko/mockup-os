@@ -2,13 +2,13 @@
 
 # Mockup OS
 
-**An authoring platform for high-fidelity product mockups — built for humans and AI agents working together.**
+**The missing layer between Figma and production code.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](ROADMAP.md)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[Quick start](#quick-start) · [Why Mockup OS](#why-mockup-os) · [Architecture](#architecture) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#quick-start) · [What it is](#what-is-mockup-os) · [Architecture](#architecture) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -16,11 +16,22 @@
 
 ## What is Mockup OS?
 
-**Mockup OS is a React-based operating system for product mockups.** Each mockup is a real `.tsx` route — not an image, not a Figma frame, not a vibe-coded throwaway. A single shell renders every project, a metadata registry keeps screens coherent, and a Fastify sidecar lets AI agents safely generate, refine, validate, and document the work.
+**Mockup OS is a code-first mockup workspace for visually designing a cohesive user experience — every screen, every state, every flow — as real React code that looks like the shipped app.** A validated metadata registry keeps dozens of screens coherent as the product grows. AI agents scaffold new screens, audit flows, fill gaps, and build versioned handoff packs through a typed surface that won't let them land broken changes. A "presentation mode" strips the builder chrome so each mockup renders pixel-identically to what ships.
 
-The result: mockups that *look* like the final product, *behave* like the final product, and produce a clean handoff pack when the design work is done.
+Use it when Figma isn't enough, when stakeholders need to *believe* the product works, and when you want to pin down every empty state, error, and permission-gated edge case before a single backend engineer writes a line of code.
 
-> A mockup in Mockup OS is a real React route backed by structured metadata. The shape of that metadata is the guardrail that keeps AI-generated screens coherent across pages, flows, and iterations.
+### Where it fits
+
+|                             | Figma / design tools    | Screenshots & decks    | Vibe-coded AI pages        | **Mockup OS**                                     |
+| --------------------------- | ----------------------- | ---------------------- | -------------------------- | ------------------------------------------------- |
+| Looks like the product      | Mostly                  | Yes (until it doesn't) | Yes                        | **Yes — it *is* the code that would ship**        |
+| Real routing & state        | No                      | No                     | Sometimes                  | **Yes**                                           |
+| Coherent across 30+ screens | With heroic discipline  | No                     | No                         | **Enforced by a validated registry**              |
+| Safe for AI to author       | No (it's a canvas)      | N/A                    | Not really                 | **Yes — typed surface, sidecar mediation**        |
+| Handoff to engineering      | Screenshot + prayer     | Screenshot + prayer    | Lift-and-shift a prototype | **Versioned pack: code + snapshots + brief lock** |
+| Needs a backend             | No                      | No                     | Often yes                  | **No — sidecar is design-time only**              |
+
+> A mockup in Mockup OS is a real React route backed by structured metadata. That metadata is the guardrail that keeps AI-generated screens coherent across pages, flows, and iterations.
 
 ## Why Mockup OS exists
 
@@ -43,16 +54,19 @@ Mockup OS takes the middle path:
 
 ## Key features
 
-- **Multi-project shell.** One runtime, many products under `/Projects/<id>/`.
-- **Screen registry with validation.** `defineScreen(...)` + `npm run validate` catches drift immediately.
-- **Presentation mode.** Toggle `H` and `P` to strip the builder chrome. The mockup fills the viewport like the shipped app.
-- **Metadata-driven inspector.** Right panel shows states, fixtures, components, permissions, journeys, known gaps.
-- **AI agent surface.** `.claude/` agents scaffold screens, audit journeys, plan sitemaps, expand briefs, and build handoff packs.
-- **Fastify sidecar.** The only process that writes to disk. AI calls and file mutations flow through one safe pipe.
-- **Versioned handoff packs.** `npm run handoff` produces `artifacts/handoff/v<n>/` with docs, screenshots, and a brief lock.
-- **Fixture system.** Typed JSON in `data/`, bound through `mockups/fixtures.ts`, swappable per state.
-- **Permissions model.** Declare in `project.config.ts`, gate per call-site with `usePermission`.
-- **Isolation rules.** Mockups can never import from the shell. Presentation mode stays pristine by construction.
+- **Multi-project shell.** One runtime, many products under `/Projects/<id>/`. Auto-discovered, hot-reloaded, switchable via the project picker.
+- **Screen registry with validation.** `defineScreen(...)` declares id, title, route, states, fixtures, permissions, journeys, layout family, known gaps, and status. `npm run validate` catches drift immediately.
+- **Presentation mode.** Toggle `H` (hide chrome) or `P` (explicit toggle) and the mockup fills the viewport with zero layout residue — pixel-identical to what ships.
+- **Metadata-driven right-panel inspector.** States, fixtures (with inline JSON editing + per-session overrides), permissions, journey membership, status dropdown, and **inline-editable known gaps** — all persisted through the sidecar via ts-morph AST mutations that preserve formatting.
+- **Five-tab left panel.** Sitemap (by-section or by-URL, with ghost-screen surfacing), Journeys, Patterns, Data (fixture browser with generate/regenerate), and Brief (authored markdown with "Expand with AI" per section).
+- **AI agent surface.** `.claude/` ships nine named agents, seven slash commands, and five authoring skills. Agents scaffold screens, audit journeys, plan sitemaps, expand briefs, generate fixtures, curate shared components, and gate handoffs. Streaming progress shows in the prompt bar with a drawer pinned bottom-right.
+- **Fastify sidecar.** The only process that writes to disk. AI calls and every file mutation flow through one safe pipe (path-safety, atomic writes, AST-level CRUD for screens).
+- **Fixture overrides.** Edit fixture JSON live in the Data panel; changes take effect immediately via in-memory overrides. "Save" writes through the sidecar, "Revert" restores the on-disk value.
+- **Versioned handoff packs.** `npm run handoff` produces `artifacts/handoff/v<n>/` with per-screen PNG snapshots, an embedded README, and a frozen `brief.md` so the pack is a standalone artifact.
+- **Ghost screens.** Routes referenced by `docs/sitemap.md` but not yet implemented render a first-class "Proposed screen" placeholder prompting you to run `/new-screen`.
+- **Preflight script.** `npm run preflight` runs typecheck, lint, vitest, registry validation (plus a negative test), isolation checks, and optional sidecar probes before you tag.
+- **Permissions model.** Declare in `project.config.ts`, gate per call-site with `usePermission`, toggle live from the inspector.
+- **Isolation rules.** Mockups can never import from the shell or the zustand store. Presentation mode stays pristine by construction — it's not a CSS trick.
 
 ## Screenshot
 
@@ -79,23 +93,25 @@ Keybinds:
 
 Scripts (run from `src/mockup-os/`):
 
-| Command              | Purpose                                                   |
-| -------------------- | --------------------------------------------------------- |
-| `npm run dev`        | Vite dev server                                           |
-| `npm run sidecar`    | Fastify sidecar on `:5179` (AI calls + file writes)       |
-| `npm run dev:all`    | Both, in parallel                                         |
-| `npm run build`      | Typecheck + production build                              |
-| `npm run typecheck`  | TypeScript only                                           |
-| `npm run lint`       | ESLint                                                    |
-| `npm run test`       | Vitest (unit + registry validation)                       |
-| `npm run e2e`        | Playwright smoke tests                                    |
-| `npm run validate`   | Validate the registry, exit non-zero on errors            |
-| `npm run docs:build` | Generate Markdown docs into `artifacts/docs/`             |
-| `npm run handoff`    | Build a versioned handoff pack under `artifacts/handoff/` |
+| Command              | Purpose                                                                   |
+| -------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`        | Vite dev server                                                           |
+| `npm run sidecar`    | Fastify sidecar on `:5179` (AI calls + file writes)                       |
+| `npm run dev:all`    | Both, in parallel                                                         |
+| `npm run build`      | Typecheck + production build                                              |
+| `npm run typecheck`  | TypeScript only                                                           |
+| `npm run lint`       | ESLint                                                                    |
+| `npm run test`       | Vitest (unit + registry validation)                                       |
+| `npm run e2e`        | Playwright smoke tests                                                    |
+| `npm run validate`   | Validate the registry, exit non-zero on errors                            |
+| `npm run docs:build` | Generate Markdown docs into `artifacts/docs/`                             |
+| `npm run snapshot`   | Capture per-screen PNG snapshots (Playwright, presentation on)            |
+| `npm run handoff`    | Build a versioned handoff pack under `artifacts/handoff/`                 |
+| `npm run preflight`  | Run the full pre-release gate (typecheck, lint, test, isolation, sidecar) |
 
 ## Example workflow with AI agents
 
-Mockup OS ships with a `.claude/` directory of named agents, slash commands, and skills. A typical session looks like:
+Mockup OS ships with a `.claude/` directory of named agents, slash commands, and authoring skills. A typical session looks like:
 
 ```text
 You:    /new-screen example-project "Transfer scheduled confirmation"
@@ -114,16 +130,23 @@ Claude: → journey-auditor agent
 You:    /audit-sitemap example-project
 Claude: → sitemap-planner agent
           • refreshes docs/sitemap.md
-          • adds 3 ghost screens to cover the gap
+          • adds 3 ghost screens to cover the gap (now visible as placeholders in the shell)
+
+You:    /generate-data finch.accounts wealthy
+Claude: → data-generator agent
+          • writes Projects/example-project/data/finch.accounts.wealthy.json
+          • inline-preview lands in the Data tab; the Data panel picks it up live
 
 You:    /handoff example-project
 Claude: → handoff-reviewer agent (pre-flight)
         → npm run handoff
           • artifacts/handoff/v3/ written
-          • brief locked, screens snapshotted, manifest signed
+          • brief locked, screens snapshotted, README embedded, manifest signed
 ```
 
-The agents are defined in [.claude/agents/](.claude/agents/). Slash commands are in [.claude/commands/](.claude/commands/). Read [CLAUDE.md](CLAUDE.md) to see how the pieces fit together.
+Nine agents ship out of the box: `mockup-generator`, `journey-auditor`, `sitemap-planner`, `docs-writer`, `permission-analyst`, `data-generator`, `component-curator`, `brief-expander`, `handoff-reviewer`. Seven slash commands wrap them: `/new-screen`, `/new-journey`, `/audit-journeys`, `/audit-sitemap`, `/generate-data`, `/expand-brief`, `/handoff`.
+
+The agents are defined in [.claude/agents/](.claude/agents/). Slash commands are in [.claude/commands/](.claude/commands/). Authoring skills (isolation rules, design tokens, appframe patterns, permissions, fixtures) are in [.claude/skills/](.claude/skills/). Read [CLAUDE.md](CLAUDE.md) to see how the pieces fit together.
 
 ## Architecture
 
@@ -182,15 +205,6 @@ We welcome contributions. Before you open a PR, please read:
 - [SECURITY.md](SECURITY.md) — how to responsibly report a vulnerability.
 
 Good first issues are tagged [`good first issue`](https://github.com/miko/mockup-os/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
-
-## Roadmap
-
-High-level direction lives in [ROADMAP.md](ROADMAP.md). Dated changes live in [CHANGELOG.md](CHANGELOG.md). Near-term highlights:
-
-- **v0.2** — Handoff v2 with snapshots, README, and brief lock.
-- **v0.3** — Second example product beyond the current `example-project`.
-- **v0.4** — Multi-viewport screenshot matrix in handoff packs.
-- **v1.0** — Stable registry schema, documented agent API, published handoff manifest format.
 
 ## License
 
