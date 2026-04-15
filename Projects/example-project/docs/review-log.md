@@ -18,3 +18,6 @@ Append-only history of screen status transitions.
 - 2026-04-15T08:50:16.197Z — `finch.overview`: draft → **approved**
 - 2026-04-15T08:50:17.358Z — `finch.overview`: approved → **deprecated**
 - 2026-04-15T08:50:19.721Z — `finch.overview`: deprecated → **draft**
+- 2026-04-15T11:51:08.929Z — `finch.accounts.detail`: in-review → **approved**
+- 2026-04-15T11:51:13.050Z — `finch.accounts.detail`: approved → **draft**
+- 2026-04-15T11:57:13.968Z — `finch.overview`: draft → **approved**

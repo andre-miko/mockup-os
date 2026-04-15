@@ -52,7 +52,7 @@ export const screens = [
       { id: 'stat', name: 'Stat', path: 'mockups/_system/ui.tsx' },
       { id: 'card', name: 'Card', path: 'mockups/_system/ui.tsx' },
     ],
-    status: "draft",
+    status: "approved",
     version: '0.2.0',
     relatedScreens: ['finch.accounts.list', 'finch.transfer.initiate'],
     knownGaps: [
@@ -70,6 +70,11 @@ export const screens = [
             id: "gap.fn5kwp",
             description: "iu dono",
             severity: "info",
+          },
+          {
+            id: "gap.q036fa",
+            description: "WIN!",
+            severity: "warn",
           },
         ],
     sections: ['overview'],
@@ -114,7 +119,7 @@ export const screens = [
     defaultStateId: 'default',
     fixtures: ['finch.accounts.default', 'finch.transactions.default'],
     components: [{ id: 'card', name: 'Card', path: 'mockups/_system/ui.tsx' }],
-    status: 'in-review',
+    status: "draft",
     version: '0.1.0',
     relatedScreens: ['finch.accounts.list', 'finch.transfer.initiate'],
     knownGaps: [

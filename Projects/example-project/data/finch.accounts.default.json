@@ -1,23 +1,16 @@
 [
   {
     "id": "acc_1",
-    "name": "Everyday Shuffling",
+    "name": "Starter Savings",
     "kind": "checking",
-    "balance": 4820.55,
-    "last4": "4021"
+    "balance": 312.4,
+    "last4": "0001"
   },
   {
     "id": "acc_2",
-    "name": "Emergency Savings",
+    "name": "Rainy Day",
     "kind": "savings",
-    "balance": 18500,
-    "last4": "9911"
-  },
-  {
-    "id": "acc_3",
-    "name": "Travel Card",
-    "kind": "card",
-    "balance": -321.14,
-    "last4": "0044"
+    "balance": 150,
+    "last4": "0002"
   }
 ]
