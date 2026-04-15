@@ -17,13 +17,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@framework/*": ["framework/*"],
-      "@shell/*": ["shell/*"],
-      "@mockups/*": ["mockups/*"],
-      "@app/*": ["app/*"],
+      "@framework/*": ["./framework/*"],
+      "@shell/*": ["./shell/*"],
+      "@mockups/*": ["./mockups/*"],
+      "@app/*": ["./app/*"],
       "@projects/*": ["../../Projects/*"]
     },
     "types": ["vite/client", "vitest/globals"]

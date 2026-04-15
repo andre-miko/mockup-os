@@ -12,13 +12,12 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@framework/*": ["framework/*"],
-      "@shell/*": ["shell/*"],
-      "@mockups/*": ["mockups/*"],
-      "@app/*": ["app/*"]
+      "@framework/*": ["./framework/*"],
+      "@shell/*": ["./shell/*"],
+      "@mockups/*": ["./mockups/*"],
+      "@app/*": ["./app/*"]
     }
   },
   "include": ["vite.config.ts", "playwright.config.ts"]
