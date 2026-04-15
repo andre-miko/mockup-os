@@ -77,5 +77,5 @@ The first tagged release. Cut when the community-health files are in, the regist
 
 ---
 
-[Unreleased]: https://github.com/miko/mockup-os/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/miko/mockup-os/releases/tag/v0.1.0
+[Unreleased]: https://github.com/Miko-Earth/mockup-os/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Miko-Earth/mockup-os/releases/tag/v0.1.0

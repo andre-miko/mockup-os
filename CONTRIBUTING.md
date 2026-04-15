@@ -32,7 +32,7 @@ If you want one of these, please open a discussion first.
 Prerequisites: Node 20+, npm 10+, and a recent Claude Code or Anthropic API key *only* if you want the AI sidecar live (the rest of the system runs without it).
 
 ```sh
-git clone https://github.com/miko/mockup-os.git
+git clone https://github.com/Miko-Earth/mockup-os.git
 cd mockup-os/src/mockup-os
 npm install
 npm run dev:all
@@ -120,6 +120,6 @@ Only maintainers publish releases. The process is documented in [GOVERNANCE.md](
 
 ## Questions?
 
-Open a [discussion](https://github.com/miko/mockup-os/discussions) or drop a note in an existing issue. Please don't email maintainers directly for project questions — keep the conversation in the open so the next person benefits.
+Open a [discussion](https://github.com/Miko-Earth/mockup-os/discussions) or drop a note in an existing issue. Please don't email maintainers directly for project questions — keep the conversation in the open so the next person benefits.
 
 Thanks for helping build Mockup OS.

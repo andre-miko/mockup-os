@@ -77,7 +77,7 @@ Mockup OS takes the middle path:
 ## Quick start
 
 ```sh
-git clone https://github.com/miko/mockup-os.git
+git clone https://github.com/Miko-Earth/mockup-os.git
 cd mockup-os/src/mockup-os
 npm install
 npm run dev:all
@@ -204,7 +204,7 @@ We welcome contributions. Before you open a PR, please read:
 - [GOVERNANCE.md](GOVERNANCE.md) — who decides what, and how decisions are made, including the conduct expectations.
 - [SECURITY.md](SECURITY.md) — how to responsibly report a vulnerability.
 
-Good first issues are tagged [`good first issue`](https://github.com/miko/mockup-os/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+Good first issues are tagged [`good first issue`](https://github.com/Miko-Earth/mockup-os/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 ## License
 
@@ -214,6 +214,6 @@ Mockup OS is released under the [MIT License](LICENSE). You may use it freely in
 
 <div align="center">
 
-Built by [Miko](https://github.com/miko) and contributors.
+Built by [Miko Earth](https://github.com/Miko-Earth) and contributors.
 
 </div>

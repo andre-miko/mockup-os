@@ -103,7 +103,7 @@ For clarity, these are *not* on the roadmap and will not be, absent a very compe
 - Support for runtime frameworks other than React.
 - A bundler other than Vite.
 - A backend beyond the existing sidecar.
-- A hosted SaaS offering from the Miko organisation.
+- A hosted SaaS offering from the Miko Earth organisation.
 - A WYSIWYG visual editor. Mockup OS is deliberately code-first — the AI agents are the "visual editor".
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#what-is-out-of-scope-right-now) for the current scope boundary on PRs.

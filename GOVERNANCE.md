@@ -4,7 +4,7 @@ This document describes how Mockup OS is governed: who makes decisions, how deci
 
 ## Ownership
 
-Mockup OS is owned by the **[Miko](https://github.com/miko) organisation** on GitHub and released under the [MIT License](LICENSE). The copyright is held collectively by Miko and the project's contributors.
+Mockup OS is owned by the **[Miko Earth](https://github.com/Miko-Earth) organisation** on GitHub and released under the [MIT License](LICENSE). The copyright is held collectively by Miko Earth and the project's contributors.
 
 ## Roles
 
