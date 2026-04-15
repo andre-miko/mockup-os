@@ -52,6 +52,7 @@ export function PatternsTab({ query }: { query: string }) {
                 <li key={s.id}>
                   <NavLink
                     to={s.route}
+                    end
                     className={({ isActive }) =>
                       clsx(
                         'flex items-center justify-between rounded px-2 py-1 text-shell-text hover:bg-white/5',

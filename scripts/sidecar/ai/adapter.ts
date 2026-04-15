@@ -38,6 +38,14 @@ export interface PromptArgs {
   userPrompt: string;
   /** Optional system prompt. Cached when the adapter supports it. */
   systemPrompt?: string;
+  /**
+   * When true, the adapter should treat `systemPrompt` as the authoritative
+   * system prompt rather than appending it to the backend's default. Use this
+   * for structured completions (brief expansion, fixture generation) where
+   * Claude Code's conversational default prompt would otherwise leak into
+   * the output as "Would you like me to…" framing.
+   */
+  replaceSystemPrompt?: boolean;
   /** Optional model id override (e.g. `claude-sonnet-4-6`). */
   model?: string;
   /** Working directory. Adapters may set the spawn cwd to this. */

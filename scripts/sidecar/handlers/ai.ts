@@ -9,6 +9,7 @@ interface ProjectParams {
 interface PromptBody {
   prompt?: string;
   systemPrompt?: string;
+  replaceSystemPrompt?: boolean;
   model?: string;
 }
 interface GenerateDataBody {
@@ -109,6 +110,7 @@ export function registerAi(app: FastifyInstance): void {
         await resolved.adapter.prompt({
           userPrompt,
           systemPrompt: req.body?.systemPrompt,
+          replaceSystemPrompt: req.body?.replaceSystemPrompt ?? false,
           model: req.body?.model ?? resolved.model,
           cwd: project.rootPath,
           signal: controller.signal,
@@ -172,6 +174,9 @@ export function registerAi(app: FastifyInstance): void {
       await resolved.adapter.prompt({
         userPrompt,
         systemPrompt,
+        // Fully replace the backend's default prompt so the model outputs
+        // raw JSON instead of conversational framing like "Here's the data:".
+        replaceSystemPrompt: true,
         cwd: project.rootPath,
         signal: controller.signal,
         onEvent: write,

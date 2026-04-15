@@ -1,0 +1,16 @@
+[
+  {
+    "id": "acc_1",
+    "name": "Starter Checking",
+    "kind": "checking",
+    "balance": 312.4,
+    "last4": "0001"
+  },
+  {
+    "id": "acc_2",
+    "name": "Rainy Day",
+    "kind": "savings",
+    "balance": 150,
+    "last4": "0002"
+  }
+]

@@ -134,23 +134,27 @@ function BriefFileCard({
     setNotice(null);
     let buffer = '';
     const systemPrompt = [
-      'You are the brief-expander agent for Mockup OS.',
-      'Take the user\'s draft brief section and produce a polished, comprehensive version.',
-      'Preserve every concrete intent and example. Expand bullets into well-structured prose where appropriate, but keep the same heading structure.',
-      'Output ONLY the rewritten markdown for this single section — no surrounding explanation.',
+      'You rewrite a single markdown brief section.',
+      'Your entire response must be the rewritten markdown and nothing else.',
+      'Do NOT add preamble such as "Here is…", "Sure, I can…", or similar framing.',
+      'Do NOT add a trailing question or offer ("Would you like me to…").',
+      'Do NOT wrap the output in triple-backtick code fences.',
+      'Preserve every concrete intent and example from the draft.',
+      'Expand bullets into well-structured prose where helpful, but keep the same heading structure.',
     ].join(' ');
     const userPrompt = [
-      `Section file: ${fileName}`,
-      'Current draft:',
-      '---',
+      `Rewrite the markdown section below (from ${fileName}).`,
+      'Output the full rewritten markdown only — no commentary before or after.',
+      '',
+      '--- BEGIN DRAFT ---',
       content,
-      '---',
-      'Return the rewritten markdown.',
+      '--- END DRAFT ---',
     ].join('\n');
 
     await sidecar.streamPrompt(projectId, {
       prompt: userPrompt,
       systemPrompt,
+      replaceSystemPrompt: true,
       onEvent: (e) => {
         if (e.type === 'chunk' && e.text) buffer += e.text;
         if (e.type === 'error') {
@@ -159,8 +163,9 @@ function BriefFileCard({
       },
     });
     setExpanding(false);
-    if (buffer.trim()) {
-      setContent(buffer.trim() + '\n');
+    const cleaned = stripConversationalFraming(buffer);
+    if (cleaned.trim()) {
+      setContent(cleaned);
       setNotice({
         kind: 'info',
         text: 'AI rewrite ready — review, then Save to write to disk.',
@@ -212,12 +217,13 @@ function BriefFileCard({
               onClick={expand}
               disabled={expanding || saving}
               className={clsx(
-                'rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
+                'flex items-center gap-1 rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
                 expanding || saving
                   ? 'cursor-not-allowed text-shell-muted'
                   : 'text-shell-text hover:bg-white/5',
               )}
             >
+              {expanding && <Spinner />}
               {expanding ? 'Expanding with AI…' : 'Expand with AI'}
             </button>
             {dirty && (
@@ -248,5 +254,55 @@ function BriefFileCard({
         </div>
       )}
     </div>
+  );
+}
+
+// Claude Code's print mode sometimes wraps rewrites in chatter the system
+// prompt can't fully suppress — things like "Here's the expanded version…",
+// `---` section dividers around the content, or a trailing "Let me know if
+// you'd like me to save it." This peels those layers off so the textarea
+// receives clean markdown.
+function stripConversationalFraming(raw: string): string {
+  let text = raw.trim();
+
+  // Whole-response code fence? Unwrap it.
+  const fenced = text.match(/^```(?:markdown|md)?\s*\n([\s\S]*?)\n?```\s*$/i);
+  if (fenced) text = fenced[1].trim();
+
+  // Drop anything before the first markdown heading.
+  const headingMatch = text.match(/^#{1,6}\s.+$/m);
+  if (headingMatch && headingMatch.index && headingMatch.index > 0) {
+    text = text.slice(headingMatch.index);
+  }
+
+  // Strip horizontal rules bordering the content (model often wraps output
+  // in `---` blocks to separate its own commentary from the rewrite).
+  text = text.replace(/^---\s*\n+/, '').replace(/\n+---\s*$/, '');
+
+  // Strip trailing conversational paragraphs.
+  const trailingStarters = [
+    /\n\s*Review the .+$/is,
+    /\n\s*Let me know .+$/is,
+    /\n\s*If you'?d like .+$/is,
+    /\n\s*Would you like .+$/is,
+    /\n\s*Feel free to .+$/is,
+    /\n\s*I'?ve .+$/is,
+    /\n\s*I have .+$/is,
+    /\n\s*(The )?rewrite .+$/is,
+  ];
+  for (const re of trailingStarters) text = text.replace(re, '');
+
+  // Trim any remaining dangling horizontal rule left over after the cut.
+  text = text.replace(/\n+---\s*$/, '');
+
+  return text.trim() + '\n';
+}
+
+function Spinner() {
+  return (
+    <span
+      className="inline-block h-2.5 w-2.5 shrink-0 animate-spin rounded-full border border-shell-muted border-t-transparent"
+      aria-hidden
+    />
   );
 }

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "acc_1",
+    "name": "Primary Checking",
+    "kind": "checking",
+    "balance": 12450.32,
+    "last4": "7788"
+  },
+  {
+    "id": "acc_2",
+    "name": "High-Yield Savings",
+    "kind": "savings",
+    "balance": 42000,
+    "last4": "2233"
+  },
+  {
+    "id": "acc_3",
+    "name": "Rewards Card",
+    "kind": "card",
+    "balance": -854.9,
+    "last4": "5566"
+  },
+  {
+    "id": "acc_4",
+    "name": "Vacation Fund",
+    "kind": "savings",
+    "balance": 3200,
+    "last4": "1010"
+  }
+]

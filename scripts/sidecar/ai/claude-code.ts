@@ -79,10 +79,26 @@ function runClaude(bin: string, args: PromptArgs): Promise<void> {
   return new Promise((resolve) => {
     const cliArgs: string[] = ['-p', shellQuote(args.userPrompt)];
     if (args.systemPrompt) {
-      cliArgs.push('--append-system-prompt', shellQuote(args.systemPrompt));
+      const flag = args.replaceSystemPrompt ? '--system-prompt' : '--append-system-prompt';
+      cliArgs.push(flag, shellQuote(args.systemPrompt));
     }
     if (args.model) {
       cliArgs.push('--model', shellQuote(args.model));
+    }
+    // Structured completions (brief expansion, fixture generation) expect a
+    // plain text response. Without this, Claude Code's agent loop will try
+    // to invoke Write/Edit on the target file and — when permission is
+    // denied — reply conversationally with "I need write permission…"
+    // instead of returning the content we asked for.
+    if (args.replaceSystemPrompt) {
+      cliArgs.push(
+        '--disallowedTools',
+        shellQuote(
+          'Write,Edit,MultiEdit,NotebookEdit,Bash,Task,WebFetch,WebSearch,Read,Glob,Grep',
+        ),
+        '--max-turns',
+        '1',
+      );
     }
 
     const child = spawn(bin, cliArgs, {

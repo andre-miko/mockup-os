@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { getRegistry } from '@framework/registry';
 import { useActiveProjectId } from '@framework/hooks';
@@ -103,9 +103,30 @@ function FixtureCard({
   sidecarOnline: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
+  // Track *which* async action is running, not just whether one is. With a
+  // shared boolean the Upload button would display "Uploading…" while the
+  // Generate stream was running.
+  const [busy, setBusy] = useState<null | 'uploading' | 'generating'>(null);
   const [notice, setNotice] = useState<{ kind: 'info' | 'error'; text: string } | null>(null);
+  // The registry snapshot in `fixture.data` comes from the JS bundle and
+  // only refreshes on a full dev-server restart. To mirror the Brief tab's
+  // behaviour we re-read the JSON from disk through the sidecar the first
+  // time the card opens, and after every upload.
+  const [freshData, setFreshData] = useState<unknown | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewData = freshData ?? fixture.data;
+
+  useEffect(() => {
+    if (!open || !projectId || !sidecarOnline || freshData !== null) return;
+    let cancelled = false;
+    sidecar.getFixture(projectId, fixture.id).then((res) => {
+      if (cancelled) return;
+      if (res.status === 'ok') setFreshData(res.data.data);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, projectId, sidecarOnline, fixture.id, freshData]);
 
   const upload = async () => {
     setNotice(null);
@@ -117,7 +138,7 @@ function FixtureCard({
     const file = e.target.files?.[0];
     e.target.value = ''; // allow re-selecting the same file later
     if (!file || !projectId) return;
-    setBusy(true);
+    setBusy('uploading');
     try {
       const text = await file.text();
       let parsed: unknown;
@@ -128,14 +149,15 @@ function FixtureCard({
           kind: 'error',
           text: `Not valid JSON: ${(err as Error).message}`,
         });
-        setBusy(false);
+        setBusy(null);
         return;
       }
       const res = await sidecar.writeFixture(projectId, fixture.id, parsed);
       if (res.status === 'ok') {
+        setFreshData(parsed);
         setNotice({
           kind: 'info',
-          text: `Wrote ${res.data.bytes} bytes. HMR will refresh screens.`,
+          text: `Wrote ${res.data.bytes} bytes. Reload the page for mockups to pick up the new data.`,
         });
       } else if (res.status === 'offline') {
         setNotice({ kind: 'error', text: 'Sidecar offline.' });
@@ -143,34 +165,68 @@ function FixtureCard({
         setNotice({ kind: 'error', text: `Upload failed: ${res.message}` });
       }
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
   const generate = async () => {
-    if (!projectId) return;
-    setBusy(true);
-    setNotice(null);
-    // Temporarily POST directly; Phase 9 fills this in.
-    try {
-      const res = await fetch(
-        `${sidecar.baseUrl}/api/projects/${encodeURIComponent(projectId)}/ai/generate-data`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' },
-      );
-      if (res.status === 501) {
-        const body = (await res.json().catch(() => ({}))) as { message?: string };
-        setNotice({
-          kind: 'info',
-          text: body.message ?? 'AI fixture generation arrives in Phase 9.',
-        });
-      } else if (!res.ok) {
-        setNotice({ kind: 'error', text: `HTTP ${res.status}` });
-      }
-    } catch {
-      setNotice({ kind: 'error', text: 'Sidecar offline.' });
-    } finally {
-      setBusy(false);
+    if (!projectId || !sidecarOnline) return;
+    setBusy('generating');
+    setNotice({ kind: 'info', text: 'Asking the model for fresh data…' });
+
+    // Infer a schema hint from whatever we're currently previewing, so the
+    // model produces a shape compatible with the existing screens. For
+    // arrays we only send the first element — enough to describe keys and
+    // types without bloating the prompt.
+    const schemaSample = Array.isArray(previewData) ? previewData.slice(0, 1) : previewData;
+    const schemaHint = JSON.stringify(schemaSample, null, 2).slice(0, 2000);
+
+    let text = '';
+    const res = await sidecar.streamGenerateData(projectId, {
+      fixtureId: fixture.id,
+      prompt: fixture.description ?? 'realistic example data',
+      schemaHint,
+      onEvent: (ev) => {
+        if (ev.type === 'chunk' && typeof ev.text === 'string') text += ev.text;
+        if (ev.type === 'error') {
+          setNotice({ kind: 'error', text: ev.text ?? 'AI error.' });
+        }
+      },
+    });
+
+    if (res.status !== 'ok') {
+      setBusy(null);
+      return;
     }
+
+    // Models sometimes wrap JSON in ```json fences despite instructions; strip
+    // them before parsing. Anything outside the outermost {…} or […] is noise.
+    const stripped = extractJsonBlock(text);
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(stripped);
+    } catch (err) {
+      setNotice({
+        kind: 'error',
+        text: `Model returned invalid JSON: ${(err as Error).message}`,
+      });
+      setBusy(null);
+      return;
+    }
+
+    const write = await sidecar.writeFixture(projectId, fixture.id, parsed);
+    if (write.status === 'ok') {
+      setFreshData(parsed);
+      setNotice({
+        kind: 'info',
+        text: `Generated and saved ${write.data.bytes} bytes. Reload to see it in the viewport.`,
+      });
+    } else if (write.status === 'offline') {
+      setNotice({ kind: 'error', text: 'Sidecar offline while saving.' });
+    } else {
+      setNotice({ kind: 'error', text: `Save failed: ${write.message}` });
+    }
+    setBusy(null);
   };
 
   return (
@@ -187,7 +243,7 @@ function FixtureCard({
           <span className="truncate font-mono text-shell-text">{fixture.id}</span>
         </span>
         <span className="shrink-0 font-mono text-[10px] text-shell-muted">
-          {summariseJson(fixture.data)}
+          {summariseJson(previewData)}
         </span>
       </button>
 
@@ -211,7 +267,7 @@ function FixtureCard({
             </div>
           )}
 
-          <JsonTree value={fixture.data} maxHeightClass="max-h-48" />
+          <JsonTree value={previewData} maxHeightClass="max-h-48" />
 
           <div className="mt-2 flex flex-wrap gap-1.5">
             <input
@@ -224,30 +280,36 @@ function FixtureCard({
             <button
               type="button"
               onClick={upload}
-              disabled={busy || !sidecarOnline}
+              disabled={busy !== null || !sidecarOnline}
               title={!sidecarOnline ? 'Sidecar offline — run `npm run sidecar`' : undefined}
               className={clsx(
-                'rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
-                sidecarOnline && !busy
+                'flex items-center gap-1 rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
+                sidecarOnline && busy === null
                   ? 'text-shell-text hover:bg-white/5'
                   : 'cursor-not-allowed text-shell-muted',
               )}
             >
-              {busy ? 'Uploading…' : 'Upload JSON'}
+              {busy === 'uploading' && <Spinner />}
+              {busy === 'uploading' ? 'Uploading…' : 'Upload JSON'}
             </button>
             <button
               type="button"
               onClick={generate}
-              disabled={busy || !sidecarOnline}
-              title={!sidecarOnline ? 'Sidecar offline' : 'Phase 9 feature'}
+              disabled={busy !== null || !sidecarOnline}
+              title={
+                !sidecarOnline
+                  ? 'Sidecar offline'
+                  : 'Ask Claude to regenerate this fixture based on the description and current shape'
+              }
               className={clsx(
-                'rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
-                sidecarOnline && !busy
+                'flex items-center gap-1 rounded border border-shell-border px-2 py-0.5 text-[10px] transition-colors',
+                sidecarOnline && busy === null
                   ? 'text-shell-text hover:bg-white/5'
                   : 'cursor-not-allowed text-shell-muted',
               )}
             >
-              Generate with AI
+              {busy === 'generating' && <Spinner />}
+              {busy === 'generating' ? 'Generating…' : 'Generate dummy data'}
             </button>
           </div>
 
@@ -267,4 +329,36 @@ function FixtureCard({
       )}
     </div>
   );
+}
+
+function Spinner() {
+  return (
+    <span
+      className="inline-block h-2.5 w-2.5 shrink-0 animate-spin rounded-full border border-shell-muted border-t-transparent"
+      aria-hidden
+    />
+  );
+}
+
+// Pick out the first balanced JSON value from a blob of model output. Models
+// sometimes ignore the "JSON only" instruction and add prose or ```json
+// fences, so we grep for the outermost object or array and hand that to
+// JSON.parse.
+function extractJsonBlock(raw: string): string {
+  const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const body = fenced ? fenced[1] : raw;
+  const firstBrace = body.indexOf('{');
+  const firstBracket = body.indexOf('[');
+  const start =
+    firstBrace === -1
+      ? firstBracket
+      : firstBracket === -1
+        ? firstBrace
+        : Math.min(firstBrace, firstBracket);
+  if (start === -1) return body.trim();
+  const open = body[start];
+  const close = open === '{' ? '}' : ']';
+  const lastClose = body.lastIndexOf(close);
+  if (lastClose <= start) return body.trim();
+  return body.slice(start, lastClose + 1);
 }

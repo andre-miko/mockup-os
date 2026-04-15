@@ -116,7 +116,18 @@ function TreeRow({ node, depth, expanded, toggle, selectedId, onSelect }: TreeRo
 
   return (
     <Fragment>
-      <li role="treeitem" aria-expanded={hasChildren ? isOpen : undefined}>
+      <li
+        role="treeitem"
+        aria-expanded={hasChildren ? isOpen : undefined}
+        className={clsx(
+          'flex items-center rounded',
+          isSelected
+            ? 'bg-shell-accent/15 text-shell-accent'
+            : 'text-shell-text hover:bg-white/5',
+          node.disabled && 'cursor-not-allowed opacity-60',
+          node.rowClassName,
+        )}
+      >
         <button
           type="button"
           disabled={node.disabled}
@@ -130,14 +141,7 @@ function TreeRow({ node, depth, expanded, toggle, selectedId, onSelect }: TreeRo
             onSelect?.(node.id, node);
           }}
           onKeyDown={handleKeyDown}
-          className={clsx(
-            'flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[12px] transition-colors',
-            isSelected
-              ? 'bg-shell-accent/15 text-shell-accent'
-              : 'text-shell-text hover:bg-white/5',
-            node.disabled && 'cursor-not-allowed opacity-60',
-            node.rowClassName,
-          )}
+          className="flex min-w-0 flex-1 items-center gap-1.5 bg-transparent px-1.5 py-1 text-left text-[12px] text-inherit"
           style={{ paddingLeft: `${6 + depth * 12}px` }}
         >
           {hasChildren ? (
@@ -165,9 +169,9 @@ function TreeRow({ node, depth, expanded, toggle, selectedId, onSelect }: TreeRo
               {node.sublabel}
             </span>
           )}
-
-          {node.trailing && <span className="ml-1 shrink-0">{node.trailing}</span>}
         </button>
+
+        {node.trailing && <span className="ml-1 shrink-0 pr-1.5">{node.trailing}</span>}
       </li>
 
       {isOpen &&

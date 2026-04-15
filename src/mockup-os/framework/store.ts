@@ -21,6 +21,31 @@ export const PANEL_WIDTH = {
 } as const;
 
 const PANEL_WIDTH_STORAGE_KEY = 'mockup-os:panel-widths';
+const LEFT_PANEL_TAB_STORAGE_KEY = 'mockup-os:left-panel-tab';
+
+const LEFT_PANEL_TABS = ['sitemap', 'journeys', 'patterns', 'data', 'brief'] as const;
+
+function loadLeftPanelTab(): LeftPanelTab {
+  if (typeof window === 'undefined') return 'sitemap';
+  try {
+    const raw = window.localStorage.getItem(LEFT_PANEL_TAB_STORAGE_KEY);
+    if (raw && (LEFT_PANEL_TABS as readonly string[]).includes(raw)) {
+      return raw as LeftPanelTab;
+    }
+  } catch {
+    // storage unavailable — fall through.
+  }
+  return 'sitemap';
+}
+
+function saveLeftPanelTab(tab: LeftPanelTab): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(LEFT_PANEL_TAB_STORAGE_KEY, tab);
+  } catch {
+    // storage disabled — the tab choice is non-critical.
+  }
+}
 
 function clampPanelWidth(side: 'left' | 'right', value: number): number {
   const { min, max } = PANEL_WIDTH[side];
@@ -121,7 +146,7 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   activeProjectId: getDefaultProjectId(),
   permissionOverrides: {},
   optimisticStatus: {},
-  leftPanelTab: 'sitemap',
+  leftPanelTab: loadLeftPanelTab(),
   leftPanelWidth: initialPanelWidths.leftPanelWidth,
   rightPanelWidth: initialPanelWidths.rightPanelWidth,
 
@@ -192,7 +217,10 @@ export const useBuilderStore = create<BuilderState>((set) => ({
         optimisticStatus: { ...s.optimisticStatus, [projectId]: per },
       };
     }),
-  setLeftPanelTab: (tab) => set({ leftPanelTab: tab }),
+  setLeftPanelTab: (tab) => {
+    saveLeftPanelTab(tab);
+    set({ leftPanelTab: tab });
+  },
   setLeftPanelWidth: (px) =>
     set((s) => {
       const next = clampPanelWidth('left', px);
