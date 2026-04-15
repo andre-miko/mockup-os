@@ -16,7 +16,6 @@ export function TopBar() {
   const viewport = useBuilderStore((s) => s.viewport);
   const setViewport = useBuilderStore((s) => s.setViewport);
   const togglePresentation = useBuilderStore((s) => s.togglePresentation);
-  const toggleShell = useBuilderStore((s) => s.toggleShell);
 
   const active = registry.getScreenByRoute(location.pathname);
 
@@ -61,14 +60,6 @@ export function TopBar() {
           title="Toggle presentation mode (P)"
         >
           Present
-        </button>
-        <button
-          type="button"
-          onClick={toggleShell}
-          className="rounded border border-shell-border px-2 py-1 text-xs text-shell-muted hover:text-shell-text"
-          title="Hide shell (H)"
-        >
-          Hide shell
         </button>
       </div>
     </header>

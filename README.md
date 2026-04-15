@@ -98,25 +98,25 @@ Scripts (run from `src/mockup-os/`):
 Mockup OS ships with a `.claude/` directory of named agents, slash commands, and skills. A typical session looks like:
 
 ```text
-You:    /new-screen finch "Transfer scheduled confirmation"
+You:    /new-screen example-project "Transfer scheduled confirmation"
 Claude: → mockup-generator agent
-          • writes src/mockup-os/mockups/finch/screens/TransferScheduled.tsx
-          • registers it in mockups/finch/index.ts
+          • writes Projects/example-project/mockups/screens/TransferScheduled.tsx
+          • registers it in Projects/example-project/mockups/index.ts
           • declares defineScreen(...) with states, fixtures, journeys
           • runs `npm run validate` — green
 
-You:    /audit-journeys finch
+You:    /audit-journeys example-project
 Claude: → journey-auditor agent
           • reads docs/journeys/*.md
           • cross-references the registry
           • reports: "transfer-scheduled" journey references 4 screens, 1 is a ghost
 
-You:    /audit-sitemap finch
+You:    /audit-sitemap example-project
 Claude: → sitemap-planner agent
           • refreshes docs/sitemap.md
           • adds 3 ghost screens to cover the gap
 
-You:    /handoff finch
+You:    /handoff example-project
 Claude: → handoff-reviewer agent (pre-flight)
         → npm run handoff
           • artifacts/handoff/v3/ written
@@ -188,7 +188,7 @@ Good first issues are tagged [`good first issue`](https://github.com/miko/mockup
 High-level direction lives in [ROADMAP.md](ROADMAP.md). Dated changes live in [CHANGELOG.md](CHANGELOG.md). Near-term highlights:
 
 - **v0.2** — Handoff v2 with snapshots, README, and brief lock.
-- **v0.3** — Second example product beyond `finch`.
+- **v0.3** — Second example product beyond the current `example-project`.
 - **v0.4** — Multi-viewport screenshot matrix in handoff packs.
 - **v1.0** — Stable registry schema, documented agent API, published handoff manifest format.
 

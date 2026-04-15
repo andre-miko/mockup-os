@@ -1,0 +1,6 @@
+{
+  "id": "habit-tracker",
+  "name": "Habit Tracker (Sprout)",
+  "description": "Minimal second project used to exercise multi-project switching in the shell. A personal habit tracker with a today view and a habit list.",
+  "version": "0.1.0"
+}

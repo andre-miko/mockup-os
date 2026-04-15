@@ -3,12 +3,14 @@ import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import { getRegistry } from '@framework/registry';
 import { useActiveProjectId } from '@framework/hooks';
+import { useBuilderStore } from '@framework/store';
 import type { ScreenDefinition } from '@framework/types';
 import { PermissionsPanel } from './right/PermissionsPanel';
 import { StatusDropdown } from './right/StatusDropdown';
 import { StatesPanel } from './right/StatesPanel';
 import { DataPanel } from './right/DataPanel';
 import { JourneyMembership } from './right/JourneyMembership';
+import { PanelResizer } from '../common/PanelResizer';
 
 /**
  * Right-panel screen inspector.
@@ -26,17 +28,26 @@ export function RightPanel() {
   const location = useLocation();
   const projectId = useActiveProjectId();
   const registry = useMemo(() => getRegistry(projectId), [projectId]);
+  const width = useBuilderStore((s) => s.rightPanelWidth);
+  const setWidth = useBuilderStore((s) => s.setRightPanelWidth);
   const screen = registry.getScreenByRoute(location.pathname);
   if (!screen) {
     return (
-      <aside className="w-72 shrink-0 border-l border-shell-border bg-shell-panel p-4 text-sm text-shell-muted">
+      <aside
+        style={{ width }}
+        className="relative shrink-0 border-l border-shell-border bg-shell-panel p-4 text-sm text-shell-muted"
+      >
         No screen at this route.
+        <PanelResizer side="right" width={width} onResize={setWidth} />
       </aside>
     );
   }
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-l border-shell-border bg-shell-panel">
+    <aside
+      style={{ width }}
+      className="relative flex shrink-0 flex-col border-l border-shell-border bg-shell-panel"
+    >
       {/* Overview — title, route, status, badges */}
       <div className="border-b border-shell-border p-4">
         <div className="text-[10px] uppercase tracking-wider text-shell-muted">Screen</div>
@@ -68,6 +79,7 @@ export function RightPanel() {
 
         <ComponentsSection screen={screen} />
       </div>
+      <PanelResizer side="right" width={width} onResize={setWidth} />
     </aside>
   );
 }

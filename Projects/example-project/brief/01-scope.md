@@ -1,4 +1,4 @@
-# Scope
+# Scope 2
 
 Finch is a consumer-facing personal banking product covering balances,
 account drill-down, internal transfers, and account settings. The mockups

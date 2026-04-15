@@ -49,5 +49,5 @@ export function useFixture<T = unknown>(id: string): FixtureDefinition<T> | unde
 
 /** True only when the builder is presenting the mockup as a real product. */
 export function useIsPresentation(): boolean {
-  return useBuilderStore((s) => s.presentationMode || !s.shellVisible);
+  return useBuilderStore((s) => s.presentationMode);
 }

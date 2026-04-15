@@ -19,7 +19,7 @@ The `registry` is built from the aggregate `@mockups/index` export. Adding a scr
 
 ## The shell contract
 
-The shell **must not** leak layout into the mockup. When `shellVisible` is false or `presentationMode` is true, `Shell` returns its children inside a single `<div id="mockup-root">` with no padding, no flex, no margin. That `<div>` exists only so keybind handling can work — it is otherwise inert.
+The shell **must not** leak layout into the mockup. When `presentationMode` is true, `Shell` returns its children inside a single `<div id="mockup-root">` with no padding, no flex, no margin. That `<div>` exists only so keybind handling can work — it is otherwise inert.
 
 ## Isolation rules
 

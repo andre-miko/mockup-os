@@ -49,6 +49,7 @@ export interface SitemapNode {
   status?: ScreenStatus;
   route?: string;
   screenId?: string;
+  description?: string;
   rationale?: string;
   children?: SitemapNode[];
 }
@@ -62,6 +63,7 @@ function realNode(screen: ScreenDefinition): SitemapNode {
     status: screen.status,
     route: screen.route,
     screenId: screen.id,
+    description: screen.description,
   };
 }
 
@@ -233,7 +235,6 @@ export function useSitemap(): SitemapResult {
       id: `section:${s.id}`,
       label: labelBySection.get(s.id) ?? s.id,
       kind: 'section' as const,
-      sublabel: s.description,
       children: [
         ...(realBySection.get(s.id) ?? []).map(realNode),
         ...(ghostsBySection.get(s.id) ?? []).map(ghostNode),

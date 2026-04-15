@@ -8,6 +8,7 @@ import { JourneysTab } from './tabs/JourneysTab';
 import { PatternsTab } from './tabs/PatternsTab';
 import { DataTab } from './tabs/DataTab';
 import { BriefTab } from './tabs/BriefTab';
+import { PanelResizer } from '../common/PanelResizer';
 
 type TabKey = LeftPanelTab;
 
@@ -41,12 +42,18 @@ export function LeftPanel() {
   const registry = useMemo(() => getRegistry(projectId), [projectId]);
   const active = useBuilderStore((s) => s.leftPanelTab);
   const setActive = useBuilderStore((s) => s.setLeftPanelTab);
+  const width = useBuilderStore((s) => s.leftPanelWidth);
+  const setWidth = useBuilderStore((s) => s.setLeftPanelWidth);
   const [query, setQuery] = useState('');
 
   if (registry.screens.length === 0) {
     return (
-      <aside className="flex w-64 shrink-0 flex-col items-center justify-center border-r border-shell-border bg-shell-panel p-6 text-center text-xs text-shell-muted">
+      <aside
+        style={{ width }}
+        className="relative flex shrink-0 flex-col items-center justify-center border-r border-shell-border bg-shell-panel p-6 text-center text-xs text-shell-muted"
+      >
         This project has no screens registered.
+        <PanelResizer side="left" width={width} onResize={setWidth} />
       </aside>
     );
   }
@@ -54,7 +61,10 @@ export function LeftPanel() {
   const activeTab = TABS.find((t) => t.key === active);
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r border-shell-border bg-shell-panel">
+    <aside
+      style={{ width }}
+      className="relative flex shrink-0 flex-col border-r border-shell-border bg-shell-panel"
+    >
       <div className="border-b border-shell-border p-2">
         <input
           type="search"
@@ -102,6 +112,7 @@ export function LeftPanel() {
           <BriefTab query={query} />
         ) : null}
       </div>
+      <PanelResizer side="left" width={width} onResize={setWidth} />
     </aside>
   );
 }

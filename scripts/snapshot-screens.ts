@@ -101,8 +101,8 @@ async function snapshotProject(project: DiscoveredProject, args: CliArgs) {
       try {
         await page.goto(url, { waitUntil: 'networkidle', timeout: 15_000 });
         // Hide the builder chrome so the screenshot shows the mockup as
-        // the end user would see it. The H keybind toggles `shellVisible`.
-        await page.keyboard.press('h');
+        // the end user would see it. The P keybind toggles presentation mode.
+        await page.keyboard.press('p');
         // Tiny settle to let the layout transition complete.
         await page.waitForTimeout(150);
         const path = join(outDir, `${screen.id}.png`);

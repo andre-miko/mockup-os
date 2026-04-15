@@ -15,6 +15,50 @@ export type ViewportSize = 'mobile' | 'tablet' | 'desktop' | 'full';
 
 export type LeftPanelTab = 'sitemap' | 'journeys' | 'patterns' | 'data' | 'brief';
 
+export const PANEL_WIDTH = {
+  left: { default: 360, min: 240, max: 640 },
+  right: { default: 340, min: 240, max: 640 },
+} as const;
+
+const PANEL_WIDTH_STORAGE_KEY = 'mockup-os:panel-widths';
+
+function clampPanelWidth(side: 'left' | 'right', value: number): number {
+  const { min, max } = PANEL_WIDTH[side];
+  if (!Number.isFinite(value)) return PANEL_WIDTH[side].default;
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function loadPanelWidths(): { leftPanelWidth: number; rightPanelWidth: number } {
+  const fallback = {
+    leftPanelWidth: PANEL_WIDTH.left.default,
+    rightPanelWidth: PANEL_WIDTH.right.default,
+  };
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const raw = window.localStorage.getItem(PANEL_WIDTH_STORAGE_KEY);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw) as { left?: number; right?: number };
+    return {
+      leftPanelWidth: clampPanelWidth('left', parsed.left ?? fallback.leftPanelWidth),
+      rightPanelWidth: clampPanelWidth('right', parsed.right ?? fallback.rightPanelWidth),
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function savePanelWidths(left: number, right: number): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      PANEL_WIDTH_STORAGE_KEY,
+      JSON.stringify({ left, right }),
+    );
+  } catch {
+    // storage may be disabled — silent is fine, widths are cosmetic.
+  }
+}
+
 export interface PermissionOverride {
   granted: boolean;
   mode: PermissionMode;
@@ -28,7 +72,6 @@ export const VIEWPORT_SIZES: Record<ViewportSize, { width: number | null; label:
 };
 
 interface BuilderState {
-  shellVisible: boolean;
   presentationMode: boolean;
   viewport: ViewportSize;
   /** Selected state id per screen. Keyed by screen id. */
@@ -51,10 +94,11 @@ interface BuilderState {
   optimisticStatus: Record<string, Record<string, ScreenStatus>>;
   /** Active tab in the LeftPanel — lifted here so other panes can drive it. */
   leftPanelTab: LeftPanelTab;
+  /** Persisted pixel widths for the left and right builder panels. */
+  leftPanelWidth: number;
+  rightPanelWidth: number;
 
-  toggleShell: () => void;
   togglePresentation: () => void;
-  setShellVisible: (visible: boolean) => void;
   setViewport: (v: ViewportSize) => void;
   setSelectedState: (screenId: string, stateId: string) => void;
   setActiveProject: (projectId: string) => void;
@@ -64,10 +108,13 @@ interface BuilderState {
   setOptimisticStatus: (projectId: string, screenId: string, status: ScreenStatus) => void;
   clearOptimisticStatus: (projectId: string, screenId: string) => void;
   setLeftPanelTab: (tab: LeftPanelTab) => void;
+  setLeftPanelWidth: (px: number) => void;
+  setRightPanelWidth: (px: number) => void;
 }
 
+const initialPanelWidths = loadPanelWidths();
+
 export const useBuilderStore = create<BuilderState>((set) => ({
-  shellVisible: true,
   presentationMode: false,
   viewport: 'full',
   selectedStateByScreen: {},
@@ -75,28 +122,10 @@ export const useBuilderStore = create<BuilderState>((set) => ({
   permissionOverrides: {},
   optimisticStatus: {},
   leftPanelTab: 'sitemap',
+  leftPanelWidth: initialPanelWidths.leftPanelWidth,
+  rightPanelWidth: initialPanelWidths.rightPanelWidth,
 
-  toggleShell: () =>
-    set((s) => {
-      const nextVisible = !s.shellVisible;
-      return {
-        shellVisible: nextVisible,
-        // Revealing the shell must also clear presentation mode, otherwise
-        // `hidden = !shellVisible || presentationMode` stays true and the
-        // chrome never returns. Hiding clears nothing.
-        presentationMode: nextVisible ? false : s.presentationMode,
-      };
-    }),
-  togglePresentation: () =>
-    set((s) => {
-      const next = !s.presentationMode;
-      return {
-        presentationMode: next,
-        // Leaving presentation mode always restores the shell.
-        shellVisible: next ? s.shellVisible : true,
-      };
-    }),
-  setShellVisible: (visible) => set({ shellVisible: visible }),
+  togglePresentation: () => set((s) => ({ presentationMode: !s.presentationMode })),
   setViewport: (viewport) => set({ viewport }),
   setSelectedState: (screenId, stateId) =>
     set((s) => ({
@@ -164,4 +193,18 @@ export const useBuilderStore = create<BuilderState>((set) => ({
       };
     }),
   setLeftPanelTab: (tab) => set({ leftPanelTab: tab }),
+  setLeftPanelWidth: (px) =>
+    set((s) => {
+      const next = clampPanelWidth('left', px);
+      if (next === s.leftPanelWidth) return s;
+      savePanelWidths(next, s.rightPanelWidth);
+      return { leftPanelWidth: next };
+    }),
+  setRightPanelWidth: (px) =>
+    set((s) => {
+      const next = clampPanelWidth('right', px);
+      if (next === s.rightPanelWidth) return s;
+      savePanelWidths(s.leftPanelWidth, next);
+      return { rightPanelWidth: next };
+    }),
 }));

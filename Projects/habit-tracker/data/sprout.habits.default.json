@@ -1,0 +1,34 @@
+[
+  {
+    "id": "h-water",
+    "name": "Drink 8 glasses of water",
+    "icon": "💧",
+    "cadence": "daily",
+    "streak": 12,
+    "doneToday": true
+  },
+  {
+    "id": "h-read",
+    "name": "Read 20 pages",
+    "icon": "📖",
+    "cadence": "daily",
+    "streak": 4,
+    "doneToday": false
+  },
+  {
+    "id": "h-walk",
+    "name": "Walk 30 minutes",
+    "icon": "🚶",
+    "cadence": "daily",
+    "streak": 27,
+    "doneToday": true
+  },
+  {
+    "id": "h-meditate",
+    "name": "Meditate 10 minutes",
+    "icon": "🧘",
+    "cadence": "daily",
+    "streak": 0,
+    "doneToday": false
+  }
+]

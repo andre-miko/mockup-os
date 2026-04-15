@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { useSitemap, type SitemapNode } from '@framework/sitemap';
 import type { ScreenStatus } from '@framework/types';
@@ -15,14 +15,14 @@ type View = 'by-url' | 'by-section';
  *   - By Section — grouped by `project.config.ts` sections with an
  *                  "(unassigned)" bucket for leftovers.
  *
- * Real screens are coloured by `ScreenStatus`; ghosts render in grey with
- * a ✨ prefix and open a rationale drawer when clicked.
+ * Clicking a real screen or a ghost navigates the viewport to its route;
+ * the right-panel inspector carries the detailed metadata.
  */
 export function SitemapTab({ query }: { query: string }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const sitemap = useSitemap();
   const [view, setView] = useState<View>('by-section');
-  const [drawerNode, setDrawerNode] = useState<SitemapNode | null>(null);
 
   const filteredByUrl = useMemo(
     () => filterNodes(sitemap.byUrl, query),
@@ -35,29 +35,46 @@ export function SitemapTab({ query }: { query: string }) {
 
   const source = view === 'by-url' ? filteredByUrl : filteredBySection;
   const treeNodes = useMemo(() => source.map(toTreeShape), [source]);
+  const selectedId = useMemo(
+    () => findIdByRoute(source, location.pathname),
+    [source, location.pathname],
+  );
 
   const handleSelect = (_id: string, node: TreeNodeShape) => {
     const sitemapNode = findNode(source, node.id);
     if (!sitemapNode) return;
-    if (sitemapNode.kind === 'real' && sitemapNode.route) {
+    if (sitemapNode.kind === 'section') return; // section headers are just groupers
+    if (sitemapNode.route) {
       navigate(sitemapNode.route);
-    } else if (sitemapNode.kind === 'ghost') {
-      setDrawerNode(sitemapNode);
     }
   };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-shell-border px-2 py-1.5">
-        <div className="flex gap-0.5 text-[10px]">
-          <ViewToggle active={view === 'by-section'} onClick={() => setView('by-section')}>
-            By Section
-          </ViewToggle>
-          <ViewToggle active={view === 'by-url'} onClick={() => setView('by-url')}>
-            By URL
-          </ViewToggle>
+      <div className="flex items-center justify-between gap-2 border-b border-shell-border bg-shell-bg/40 px-2 py-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-medium uppercase tracking-wider text-shell-muted/70">
+            View
+          </span>
+          <div className="inline-flex overflow-hidden rounded border border-shell-border text-[10px]">
+            <SegmentedButton
+              active={view === 'by-section'}
+              onClick={() => setView('by-section')}
+            >
+              Section
+            </SegmentedButton>
+            <SegmentedButton
+              active={view === 'by-url'}
+              onClick={() => setView('by-url')}
+            >
+              URL
+            </SegmentedButton>
+          </div>
         </div>
-        <Legend ghostCount={sitemap.ghosts.length} />
+        <div className="flex items-center gap-1.5">
+          <GhostIndicator count={sitemap.ghosts.length} />
+          <LegendPopover />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
@@ -70,6 +87,7 @@ export function SitemapTab({ query }: { query: string }) {
         ) : (
           <TreeView
             nodes={treeNodes}
+            selectedId={selectedId}
             onSelect={handleSelect}
             emptyMessage={
               query
@@ -86,17 +104,13 @@ export function SitemapTab({ query }: { query: string }) {
           screens. Phase 10&apos;s <code>sitemap-planner</code> agent can scaffold it.
         </div>
       )}
-
-      {drawerNode && (
-        <GhostDrawer node={drawerNode} onClose={() => setDrawerNode(null)} />
-      )}
     </div>
   );
 }
 
 // ─── presentational bits ────────────────────────────────────────────
 
-function ViewToggle({
+function SegmentedButton({
   active,
   onClick,
   children,
@@ -110,10 +124,10 @@ function ViewToggle({
       type="button"
       onClick={onClick}
       className={clsx(
-        'rounded px-2 py-0.5 uppercase tracking-wide transition-colors',
+        'px-2 py-0.5 text-[10px] transition-colors',
         active
           ? 'bg-shell-accent/20 text-shell-accent'
-          : 'text-shell-muted hover:bg-white/5',
+          : 'bg-transparent text-shell-muted hover:bg-white/5',
       )}
     >
       {children}
@@ -121,13 +135,80 @@ function ViewToggle({
   );
 }
 
-function Legend({ ghostCount }: { ghostCount: number }) {
+function GhostIndicator({ count }: { count: number }) {
+  if (count === 0) return null;
   return (
-    <div className="flex items-center gap-1.5 text-[10px] text-shell-muted">
-      {ghostCount > 0 && (
-        <span title="Ghost screens — authored in docs/sitemap.md, not yet implemented">
-          ✨ {ghostCount}
-        </span>
+    <span
+      className="flex items-center gap-1 rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-shell-muted"
+      title={`${count} proposed screen${count === 1 ? '' : 's'} from docs/sitemap.md, not yet implemented`}
+    >
+      <span aria-hidden>✨</span>
+      <span>{count} proposed</span>
+    </span>
+  );
+}
+
+const STATUS_LEGEND: Array<{ status: ScreenStatus | 'ghost'; label: string; hint: string }> = [
+  { status: 'draft', label: 'Draft', hint: 'Work in progress, not reviewed yet' },
+  { status: 'in-review', label: 'In review', hint: 'Awaiting feedback' },
+  { status: 'approved', label: 'Approved', hint: 'Sign-off received' },
+  { status: 'shipped', label: 'Shipped', hint: 'Implemented in production' },
+  { status: 'deprecated', label: 'Deprecated', hint: 'Retired — kept for reference' },
+  { status: 'ghost', label: 'Proposed (ghost)', hint: 'Authored in sitemap.md, not built yet' },
+];
+
+function LegendPopover() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Status legend"
+        title="Status legend"
+        className="flex h-4 w-4 items-center justify-center rounded border border-shell-border text-[10px] text-shell-muted hover:border-shell-accent hover:text-shell-accent"
+      >
+        ?
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-56 rounded border border-shell-border bg-shell-bg p-2 shadow-lg">
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-shell-muted">
+            Screen status
+          </div>
+          <ul className="space-y-1">
+            {STATUS_LEGEND.map((row) => (
+              <li key={row.status} className="flex items-start gap-2 text-[11px]">
+                <span className="mt-1 shrink-0">
+                  <StatusDot status={row.status === 'ghost' ? undefined : row.status} />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-shell-text">{row.label}</div>
+                  <div className="text-[10px] leading-snug text-shell-muted">
+                    {row.hint}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
@@ -148,8 +229,9 @@ function StatusDot({ status }: { status?: ScreenStatus }) {
               : 'bg-transparent border border-dashed border-shell-muted';
   return (
     <span
-      className={clsx('h-1.5 w-1.5 rounded-full', color)}
+      className={clsx('inline-block h-1.5 w-1.5 rounded-full align-middle', color)}
       aria-label={status ?? 'ghost'}
+      title={status ?? 'ghost'}
     />
   );
 }
@@ -203,39 +285,13 @@ function findNode(nodes: SitemapNode[], id: string): SitemapNode | null {
   return null;
 }
 
-function GhostDrawer({
-  node,
-  onClose,
-}: {
-  node: SitemapNode;
-  onClose: () => void;
-}) {
-  return (
-    <div className="border-t border-shell-border bg-shell-bg p-3 text-xs">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <div className="text-[10px] uppercase tracking-wider text-shell-muted">
-            Proposed screen
-          </div>
-          <div className="mt-0.5 text-sm font-semibold">{node.label}</div>
-          <div className="font-mono text-[10px] text-shell-muted">{node.route}</div>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded px-1 text-shell-muted hover:text-shell-text"
-          aria-label="Close rationale"
-        >
-          ✕
-        </button>
-      </div>
-      {node.rationale ? (
-        <p className="mt-2 leading-snug text-shell-text">{node.rationale}</p>
-      ) : (
-        <p className="mt-2 text-shell-muted">
-          No <code>- Why:</code> rationale in <code>sitemap.md</code>. Add one to explain what this screen is for.
-        </p>
-      )}
-    </div>
-  );
+function findIdByRoute(nodes: SitemapNode[], route: string): string | undefined {
+  for (const n of nodes) {
+    if (n.route === route && n.kind !== 'section') return n.id;
+    if (n.children) {
+      const hit = findIdByRoute(n.children, route);
+      if (hit) return hit;
+    }
+  }
+  return undefined;
 }

@@ -5,8 +5,8 @@ Everything about a mockup lives in one place: the product's `index.ts`.
 ## 1. Create the screen component
 
 ```tsx
-// src/mockup-os/mockups/finch/screens/NewScreen.tsx
-import { AppFrameBody, AppFrameHeader, PageHeader } from '../../_system';
+// Projects/example-project/mockups/screens/NewScreen.tsx
+import { AppFrameBody, AppFrameHeader, PageHeader } from '@mockups/_system';
 
 export function NewScreen() {
   return (
@@ -25,7 +25,7 @@ export function NewScreen() {
 ## 2. Register it
 
 ```ts
-// src/mockup-os/mockups/finch/index.ts
+// Projects/example-project/mockups/index.ts
 const NewScreen = lazy(() =>
   import('./screens/NewScreen').then((m) => ({ default: m.NewScreen })),
 );

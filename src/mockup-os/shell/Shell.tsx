@@ -1,11 +1,10 @@
 /**
  * Top-level builder chrome.
  *
- * Shell visibility rule (mandatory): when the shell is hidden or
- * presentation mode is on, this component renders its children with
- * ZERO wrapping markup. No padding, no flex container, no toolbar
- * residue. This is enforced by the early return below — do not
- * reintroduce a wrapper in the "hidden" branch.
+ * Presentation rule (mandatory): when presentation mode is on, this
+ * component renders its children with ZERO wrapping markup. No padding,
+ * no flex container, no toolbar residue. This is enforced by the early
+ * return below — do not reintroduce a wrapper in the presentation branch.
  */
 
 import { type ReactNode } from 'react';
@@ -19,15 +18,12 @@ import { Viewport } from './Viewport';
 import { KeybindProvider } from './KeybindProvider';
 
 export function Shell({ children }: { children: ReactNode }) {
-  const shellVisible = useBuilderStore((s) => s.shellVisible);
   const presentationMode = useBuilderStore((s) => s.presentationMode);
   const viewport = useBuilderStore((s) => s.viewport);
 
-  const hidden = !shellVisible || presentationMode;
-
-  // CRITICAL: in the hidden branch we must not wrap the mockup. The
+  // CRITICAL: in presentation mode we must not wrap the mockup. The
   // mockup owns the viewport entirely, exactly like the shipped app.
-  if (hidden) {
+  if (presentationMode) {
     return (
       <KeybindProvider>
         <div id="mockup-root" className="min-h-screen w-full">

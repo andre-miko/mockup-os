@@ -93,7 +93,7 @@ Before opening a PR, please confirm:
 We prefer [Conventional Commits](https://www.conventionalcommits.org/), loosely applied:
 
 ```text
-feat(mockups/finch): add TransferScheduled screen
+feat(example-project): add TransferScheduled screen
 fix(sidecar/fs): reject paths that escape the project root
 docs(contributing): clarify PR checklist
 chore(deps): bump vite to 7.1

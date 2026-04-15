@@ -20,6 +20,7 @@
     "handoff": "tsx --tsconfig ./tsconfig.app.json ../../scripts/build-handoff.ts",
     "snapshot": "tsx --tsconfig ./tsconfig.app.json ../../scripts/snapshot-screens.ts",
     "sidecar": "tsx --tsconfig ./tsconfig.app.json ../../scripts/sidecar/server.ts",
+    "preflight": "tsx --tsconfig ./tsconfig.app.json ../../scripts/preflight.ts",
     "dev:all": "npm-run-all --parallel dev sidecar"
   },
   "dependencies": {

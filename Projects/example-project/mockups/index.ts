@@ -52,7 +52,7 @@ export const screens = [
       { id: 'stat', name: 'Stat', path: 'mockups/_system/ui.tsx' },
       { id: 'card', name: 'Card', path: 'mockups/_system/ui.tsx' },
     ],
-    status: 'approved',
+    status: "draft",
     version: '0.2.0',
     relatedScreens: ['finch.accounts.list', 'finch.transfer.initiate'],
     knownGaps: [

@@ -23,8 +23,9 @@ The goal of v0.1 is to get the project into a state where a curious stranger can
 - [x] `.claude/` agents, slash commands, and skills.
 - [x] Left panel (all five tabs) and right panel inspector.
 - [x] Handoff v1 per project under `artifacts/handoff/v<n>/`.
-- [x] Example product: `finch`.
-- [ ] Community-health files: `README`, `LICENSE`, `CONTRIBUTING`, `SECURITY`, `GOVERNANCE`, `ROADMAP`, `CHANGELOG`, `CODEOWNERS`.
+- [x] Example product: `example-project` (a simulated consumer banking product, branded "Finch" internally).
+- [x] Community-health files: `README`, `LICENSE`, `CONTRIBUTING`, `SECURITY`, `GOVERNANCE`, `ROADMAP`, `CHANGELOG`, `CODEOWNERS`.
+- [ ] Manual verification pass across every feature (see [CHECKLIST.md](CHECKLIST.md)).
 - [ ] Screenshot and a short recording of builder → presentation → handoff.
 - [ ] First tagged release on GitHub.
 
@@ -32,11 +33,12 @@ The goal of v0.1 is to get the project into a state where a curious stranger can
 
 The handoff pack is currently minimal. v0.2 makes it genuinely useful for a downstream engineering team.
 
-- [ ] Snapshot every screen (DOM + computed styles) into the manifest.
-- [ ] Embed a `README.md` in each handoff pack summarising what changed.
-- [ ] **Brief lock**: when a handoff is built, the brief markdowns are frozen into the pack so the pack is a standalone artifact.
-- [ ] Include token maps and a component index per pack.
+- [x] Snapshot every screen into the pack — delivered via `scripts/snapshot-screens.ts` (Playwright, presses `H` for pristine capture) and copied in by `scripts/build-handoff.ts`.
+- [x] Embed a `README.md` in each handoff pack summarising what changed.
+- [x] **Brief lock**: when a handoff is built, the brief markdowns are concatenated and frozen into the pack as `brief.md`, so the pack is a standalone artifact.
+- [ ] Include a token map and a component index per pack.
 - [ ] Handoff diff tool — compare `v<n-1>` to `v<n>` and report added / changed / removed screens.
+- [ ] Capture DOM + computed styles (not just PNG) alongside the snapshots for programmatic inspection.
 
 ## v0.3 — Example breadth (next)
 
