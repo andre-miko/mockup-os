@@ -2,7 +2,7 @@
 
 # Mockup OS
 
-**Build the entire frontend — before the backend even exists.**
+**Build the frontend properly — then hand it off with zero ambiguity.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Status: Alpha](https://img.shields.io/badge/status-alpha-orange.svg)](ROADMAP.md)
@@ -10,7 +10,7 @@
 
 ![Mockup OS demo](docs/assets/demo.gif)
 
-[Quick start](#quick-start) · [What it is](#what-is-mockup-os) · [Output](#what-comes-out-of-mockup-os) · [Architecture](#architecture) · [Roadmap](ROADMAP.md) · [Contributing](CONTRIBUTING.md)
+[Quick start](#quick-start) · [What it is](#what-is-mockup-os) · [Output](#what-comes-out-of-mockup-os) · [Architecture](#architecture) · [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -30,33 +30,39 @@ That cycle is slow, lossy, and unnecessary.
 
 ---
 
-## What if you could just build it directly?
+## What Mockup OS actually does
 
-Mockup OS lets you go from idea → working frontend instantly.
+Mockup OS helps you build a **complete, working frontend experience** — without a backend — so you can:
 
-- Generate real React screens with AI  
-- Navigate them like a real product  
-- Validate flows, states, and edge cases early  
-- Iterate without design handoffs  
+- See the product as it will actually feel  
+- Validate every screen, state, and flow  
+- Iterate quickly with AI assistance  
+- Lock everything down before development starts  
 
-No wireframes.  
-No translation.  
-No redesign cycle.
+This is not about design.
+
+This is about removing ambiguity before engineering begins.
 
 ---
 
-## What is Mockup OS?
+## Important: What this is (and is not)
 
-Mockup OS is a **code-first system for building complete frontends as real applications** — before any backend exists.
+### ✅ What this IS
 
-- Real routes  
-- Real components  
-- Real state  
-- Real flows  
+- A system for building **high-fidelity, working UI mockups**
+- A way to define **every screen, state, and flow**
+- A tool to **validate the frontend before backend work begins**
+- A generator of **structured handoff packages for engineers**
 
-Everything behaves like the final product.
+### ❌ What this is NOT
 
-AI operates inside a **validated system**, ensuring consistency across the entire UI.
+- Not a full application builder  
+- Not a backend system  
+- Not something you deploy to production as-is  
+
+Mockup OS does not replace engineering.
+
+It prepares engineering.
 
 ---
 
@@ -68,36 +74,51 @@ idea → design → redesign → dev → rework → ship
 
 You get:
 
-idea → real frontend → validate → export → build backend → ship
+idea → working UI → validate → export → build → ship
+
+---
+
+## What is Mockup OS?
+
+Mockup OS is a **code-first mockup system built on real React applications.**
+
+Every mockup is:
+- A real route  
+- A real component  
+- A real flow  
+
+Everything behaves like a real product — but without backend dependencies.
+
+AI operates within a **validated structure**, ensuring consistency across the entire system.
 
 ---
 
 ## What comes out of Mockup OS
 
-Mockup OS produces a **versioned frontend system** that can be handed directly to engineering.
+Mockup OS produces a **versioned frontend specification bundle** that can be handed directly to a development team.
 
 Each output includes:
 
 - JSX screens (real routes)
 - Shared components
 - Layouts and UI patterns
-- Themes and tokens
+- Themes and design tokens
 - Feature definitions
 - Fixture data
-- Structured product brief
+- Product brief
 - Snapshot artifacts
 
 This is not a mockup.
 
-**It’s a complete frontend specification.**
+It’s a **clear, structured definition of the UI**.
 
 ---
 
 ## What engineering does next
 
-Engineering teams take this system and:
+Engineering teams take the output and:
 
-- Connect it to backend services  
+- Connect it to backend systems  
 - Implement persistence and business logic  
 - Optimize for production  
 
@@ -109,23 +130,23 @@ The UI is already defined.
 
 ## Where it fits
 
-|                             | Mockups | AI Pages | **Mockup OS** |
-| --------------------------- | ------- | -------- | ------------- |
-| Looks real                  | Sometimes | Yes | **Yes** |
-| Works like a product        | No | Sometimes | **Yes** |
-| Handles full flows          | No | No | **Yes** |
-| Consistent across screens   | Hard | No | **Enforced** |
-| Ready for engineering       | No | Partial | **Yes** |
+|                             | Static Mockups | AI Pages | **Mockup OS** |
+| --------------------------- | -------------- | -------- | ------------- |
+| Looks real                  | Sometimes      | Yes      | **Yes**       |
+| Works like a product        | No             | Sometimes| **Yes**       |
+| Covers full flows           | No             | No       | **Yes**       |
+| Consistent across screens   | Hard           | No       | **Enforced**  |
+| Ready for engineering       | No             | Partial  | **Yes**       |
 
 ---
 
 ## Key features
 
-- Code-first frontend system  
-- Validated screen registry  
+- Code-first mockup system  
 - Real routing and navigation  
-- AI-powered generation and auditing  
-- Fastify sidecar (safe file system control)  
+- Validated screen registry  
+- AI-assisted generation and auditing  
+- Fastify sidecar (safe file operations)  
 - Live fixture editing  
 - Versioned handoff packs  
 - Ghost screens for missing flows  
@@ -135,17 +156,18 @@ The UI is already defined.
 
 ## Who this is for
 
-- Engineers who want to move faster  
+- Engineers who want to eliminate UI ambiguity  
 - Founders building products without design teams  
 - Product managers validating ideas early  
-- Teams tired of slow UI iteration  
+- Teams that want faster, cleaner handoffs  
 
 ---
 
 ## This is NOT for
 
-- Static design workflows  
-- Pixel-perfect design tools  
+- Building full production applications  
+- Replacing backend systems  
+- Pixel-perfect design tooling  
 - Non-React stacks (for now)  
 
 ---
@@ -160,11 +182,6 @@ npm run dev:all
 ```
 
 Open http://localhost:5173
-
-Keybinds:
-- H — toggle presentation mode  
-- P — explicit presentation toggle  
-- ? — show keybinds  
 
 ---
 
@@ -197,7 +214,6 @@ src/mockup-os/
 scripts/
   sidecar/
   validation/
-  build/
 
 .claude/
   agents/
@@ -209,9 +225,9 @@ scripts/
 
 ## Core principles
 
-1. Build real UI from the start  
-2. Validate before backend work  
-3. Export a complete system, not mockups  
+1. Define the UI completely before backend work  
+2. Remove ambiguity from handoff  
+3. Generate systems, not screenshots  
 
 ---
 
